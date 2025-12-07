@@ -1,9 +1,8 @@
 import './style.css'
-import { div, button, render } from './solid-runtime.js'
-import { createApp } from './app.js'
+import { initResumable, setupScrollListener } from './solid-runtime.js'
 
-// 创建应用（传入客户端版本的组件）
-const app = createApp({ div, button })
+// Resumable SSR: 不重新创建 DOM，只初始化事件系统
+initResumable();
 
-// 渲染到 DOM（客户端模式）
-render(app, document.querySelector('#app'))
+// 设置滚动监听（加载更多）
+setupScrollListener();
