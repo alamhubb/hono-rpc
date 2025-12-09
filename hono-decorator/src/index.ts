@@ -10,6 +10,6 @@ export { GetMapping, PostMapping } from './decorators/http-methods';
 // 导出构建器
 export { RouteBuilder } from './builder/route-builder';
 
-// 导出全局配置
-export { AppConfig } from './config/app-config';
+// 导出全局配置和 Hooks
+export { AppConfig, useHono } from './config/app-config';
 

@@ -1,4 +1,4 @@
-import type { Hono, Context } from 'hono';
+import { Hono, type Context } from 'hono';
 import { getPrefix, getRoutes, type RouteInfo } from '../metadata/constants';
 
 /**
@@ -158,5 +158,26 @@ export class AppConfig {
     this._honoApp = null;
     this._controllers = [];
   }
+}
+
+/**
+ * 创建并配置 Hono 应用实例
+ * 自动注册所有使用装饰器的控制器
+ *
+ * @returns 配置好的 Hono 应用实例
+ *
+ * @example
+ * ```typescript
+ * import { useHono } from 'hono-decorator';
+ * import './controllers/HelloController';
+ *
+ * const app = useHono();
+ * export default app;
+ * ```
+ */
+export function useHono(): Hono {
+  const app = new Hono();
+  AppConfig.setHonoApp(app);
+  return app;
 }
 
