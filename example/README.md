@@ -50,7 +50,7 @@ npm run dev
 example/
 ├── server.ts              # Hono 应用入口
 ├── index.html            # HTML 模板
-├── vite.config.js        # Vite 配置
+├── vite.config.ts        # Vite 配置
 ├── src/
 │   ├── controllers/      # 控制器
 │   │   ├── api.controller.ts    # API 路由
