@@ -1,7 +1,8 @@
-import { RestController, GetMapping } from 'hono-decorator';
+import { RestController, RequestMapping, GetMapping } from 'hono-decorator';
 import type { Context } from 'hono';
 
-@RestController('/api')
+@RestController
+@RequestMapping('/api')
 export class HelloController {
   @GetMapping('/hello')
   hello(c: Context) {
