@@ -1,11 +1,12 @@
 import { Hono } from 'hono';
-import { RouteBuilder } from 'hono-decorator';
-import { HelloController } from './controllers/HelloController';
+import { AppConfig } from 'hono-decorator';
+// 导入控制器（装饰器会自动注册）
+import './controllers/HelloController';
 
 const app = new Hono();
 
-// 使用 RouteBuilder 注册控制器
-RouteBuilder.buildRoutes(app, [HelloController]);
+// 设置 Hono 应用实例，自动注册所有控制器
+AppConfig.setHonoApp(app);
 
 export default app;
 

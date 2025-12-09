@@ -1,8 +1,9 @@
 import { setPrefix } from '../metadata/constants';
+import { AppConfig } from '../config/app-config';
 
 /**
  * RestController 装饰器（TC39 Stage 3 Symbol.metadata 标准）
- * 标记一个类为 REST 控制器
+ * 标记一个类为 REST 控制器，并自动注册到 Hono 应用
  *
  * @example
  * ```typescript
@@ -19,6 +20,10 @@ export function RestController<T extends new (...args: any[]) => any>(
 ): T {
   // Symbol.metadata 标准会自动创建 metadata 对象
   console.log(`[RestController] ${context.name?.toString() || target.name}`);
+
+  // 自动注册控制器到全局配置
+  AppConfig.registerController(target);
+
   return target;
 }
 
