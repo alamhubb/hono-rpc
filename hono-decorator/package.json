@@ -19,8 +19,7 @@
   "author": "",
   "license": "MIT",
   "peerDependencies": {
-    "hono": "^4.0.0",
-    "reflect-metadata": "^0.2.0"
+    "hono": "^4.0.0"
   },
   "devDependencies": {
     "typescript": "^5.0.0"
