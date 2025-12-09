@@ -1,8 +1,8 @@
 import { Hono, Context } from 'hono';
-import { METADATA_KEYS, MetadataStorage } from '../metadata/constants';
+import { getPrefix, getRoutes, type RouteInfo } from '../metadata/constants';
 
 /**
- * 路由构建器
+ * 路由构建器（TC39 Stage 3 Symbol.metadata 标准）
  * 负责将装饰器标记的控制器转换为 Hono 路由
  */
 export class RouteBuilder {
@@ -28,19 +28,19 @@ export class RouteBuilder {
     // 创建控制器实例
     const instance = new ControllerClass();
 
-    // 获取控制器的路由前缀（从类上获取）
-    const prefix = MetadataStorage.get<string>(METADATA_KEYS.CONTROLLER_PREFIX, ControllerClass) || '';
+    // 通过 TC39 Stage 3 标准的 Symbol.metadata 获取元数据
+    const metadata = ControllerClass[Symbol.metadata];
 
-    // 获取原型对象
-    const prototype = Object.getPrototypeOf(instance);
+    // 获取控制器的路由前缀
+    const prefix = getPrefix(metadata);
 
-    // 获取所有路由方法名
-    const methodNames = MetadataStorage.getRouteMethods(prototype);
+    // 获取所有路由信息
+    const routes = metadata ? getRoutes(metadata) : [];
 
     console.log(`[RestController] ${ControllerClass.name} -> ${prefix || '/'}`);
 
-    for (const methodName of methodNames) {
-      this.registerRoute(app, instance, prototype, methodName, prefix);
+    for (const route of routes) {
+      this.registerRoute(app, instance, route, prefix);
     }
   }
 
@@ -50,31 +50,22 @@ export class RouteBuilder {
   private static registerRoute(
     app: Hono,
     instance: any,
-    prototype: any,
-    methodName: string,
+    route: RouteInfo,
     prefix: string
   ): void {
-    // 获取路由元数据
-    const routePath = MetadataStorage.get<string>(METADATA_KEYS.ROUTE_PATH, prototype, methodName);
-    const routeMethod = MetadataStorage.get<string>(METADATA_KEYS.ROUTE_METHOD, prototype, methodName);
-    const hasBody = MetadataStorage.get<boolean>(METADATA_KEYS.HAS_BODY, prototype, methodName) || false;
-
-    // 如果没有路由元数据，跳过
-    if (routePath === undefined || !routeMethod) {
-      return;
-    }
+    const { methodName, path, httpMethod, hasBody } = route;
 
     // 构建完整路径
-    const fullPath = (prefix + routePath) || '/';
+    const fullPath = (prefix + path) || '/';
 
     // 创建 Hono 处理函数
     const handler = this.createHandler(instance, methodName, hasBody);
 
     // 注册路由到 Hono
-    const method = routeMethod.toLowerCase();
+    const method = httpMethod.toLowerCase();
     (app as any)[method](fullPath, handler);
 
-    console.log(`  ├─ ${routeMethod.padEnd(6)} ${fullPath} -> ${methodName}()`);
+    console.log(`  ├─ ${httpMethod.padEnd(6)} ${fullPath} -> ${methodName}()`);
   }
 
   /**

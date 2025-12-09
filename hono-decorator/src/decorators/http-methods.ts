@@ -1,7 +1,7 @@
-import { METADATA_KEYS, MetadataStorage } from '../metadata/constants';
+import { addRoute } from '../metadata/constants';
 
 /**
- * 创建 HTTP 方法装饰器的工厂函数（Stage 3）
+ * 创建 HTTP 方法装饰器的工厂函数（TC39 Stage 3 Symbol.metadata 标准）
  * @param method - HTTP 方法
  * @param hasBody - 是否自动注入请求体（用于 POST 等方法）
  */
@@ -11,28 +11,22 @@ function createMethodDecorator(method: string, hasBody: boolean = false) {
       target: T,
       context: ClassMethodDecoratorContext<any, T>
     ): T => {
-      const propertyKey = context.name as string;
+      const methodName = context.name as string;
 
       // 标准化路由路径
       const normalizedPath = path
         ? (path.startsWith('/') ? path : `/${path}`)
         : '';
 
-      // 在类初始化时存储元数据
-      context.addInitializer(function(this: any) {
-        const proto = Object.getPrototypeOf(this);
-
-        // 存储路由路径
-        MetadataStorage.define(METADATA_KEYS.ROUTE_PATH, normalizedPath, proto, propertyKey);
-
-        // 存储 HTTP 方法
-        MetadataStorage.define(METADATA_KEYS.ROUTE_METHOD, method.toUpperCase(), proto, propertyKey);
-
-        // 存储是否需要解析 body
-        MetadataStorage.define(METADATA_KEYS.HAS_BODY, hasBody, proto, propertyKey);
+      // 使用 TC39 Stage 3 标准的 context.metadata 存储路由信息
+      addRoute(context.metadata, {
+        methodName,
+        path: normalizedPath,
+        httpMethod: method.toUpperCase(),
+        hasBody,
       });
 
-      console.log(`[${method.toUpperCase()}Mapping] ${normalizedPath || '/'} -> ${propertyKey}()`);
+      console.log(`[${method.toUpperCase()}Mapping] ${normalizedPath || '/'} -> ${methodName}()`);
 
       return target;
     };

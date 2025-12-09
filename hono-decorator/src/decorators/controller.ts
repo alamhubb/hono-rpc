@@ -1,7 +1,7 @@
-import { METADATA_KEYS, MetadataStorage } from '../metadata/constants';
+import { setPrefix } from '../metadata/constants';
 
 /**
- * RestController 装饰器（Stage 3）
+ * RestController 装饰器（TC39 Stage 3 Symbol.metadata 标准）
  * 标记一个类为 REST 控制器
  *
  * @example
@@ -17,14 +17,13 @@ export function RestController<T extends new (...args: any[]) => any>(
   target: T,
   context: ClassDecoratorContext<T>
 ): T {
-  // 标记为 REST 控制器
-  MetadataStorage.define(METADATA_KEYS.IS_REST_CONTROLLER, true, target);
+  // Symbol.metadata 标准会自动创建 metadata 对象
   console.log(`[RestController] ${context.name?.toString() || target.name}`);
   return target;
 }
 
 /**
- * RequestMapping 装饰器（Stage 3）
+ * RequestMapping 装饰器（TC39 Stage 3 Symbol.metadata 标准）
  * 用于定义类级别的路由前缀
  *
  * @param path - 路由前缀，如 '/api'
@@ -48,8 +47,8 @@ export function RequestMapping(path: string = '') {
       ? (path.startsWith('/') ? path : `/${path}`).replace(/\/$/, '')
       : '';
 
-    // 将路由前缀存储到类的元数据中
-    MetadataStorage.define(METADATA_KEYS.CONTROLLER_PREFIX, normalizedPath, target);
+    // 使用 TC39 Stage 3 标准的 context.metadata 存储前缀
+    setPrefix(context.metadata, normalizedPath);
 
     console.log(`[RequestMapping] ${context.name?.toString() || target.name} -> ${normalizedPath || '/'}`);
 

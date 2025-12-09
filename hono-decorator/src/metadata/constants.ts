@@ -1,60 +1,64 @@
 /**
- * 元数据键常量（使用 Symbol 确保唯一性）
+ * Symbol.metadata Polyfill
+ * TC39 Stage 3 Decorator Metadata 标准
+ * https://github.com/tc39/proposal-decorator-metadata
+ */
+(Symbol as any).metadata ??= Symbol('Symbol.metadata');
+
+/**
+ * 元数据键常量（使用 Symbol 确保唯一性和私有性）
  */
 export const METADATA_KEYS = {
-  IS_REST_CONTROLLER: Symbol('is:rest:controller'),
-  CONTROLLER_PREFIX: Symbol('controller:prefix'),
-  ROUTE_PATH: Symbol('route:path'),
-  ROUTE_METHOD: Symbol('route:method'),
-  HAS_BODY: Symbol('has:body'),
-  ROUTES: Symbol('routes'),
+  /** 控制器路由前缀 */
+  PREFIX: Symbol('hono:prefix'),
+  /** 路由列表 */
+  ROUTES: Symbol('hono:routes'),
 } as const;
 
 /**
- * 元数据存储工具
- * 用于在类和方法上存储和读取元数据（替代 reflect-metadata）
+ * 路由信息接口
  */
-export const MetadataStorage = {
-  /**
-   * 在目标对象上定义元数据
-   */
-  define<T>(key: symbol, value: T, target: any, propertyKey?: string | symbol): void {
-    if (propertyKey !== undefined) {
-      // 方法级别元数据
-      if (!target[METADATA_KEYS.ROUTES]) {
-        target[METADATA_KEYS.ROUTES] = {};
-      }
-      if (!target[METADATA_KEYS.ROUTES][propertyKey]) {
-        target[METADATA_KEYS.ROUTES][propertyKey] = {};
-      }
-      target[METADATA_KEYS.ROUTES][propertyKey][key] = value;
-    } else {
-      // 类级别元数据
-      target[key] = value;
-    }
-  },
+export interface RouteInfo {
+  /** 方法名 */
+  methodName: string;
+  /** 路由路径 */
+  path: string;
+  /** HTTP 方法 */
+  httpMethod: string;
+  /** 是否需要解析请求体 */
+  hasBody: boolean;
+}
 
-  /**
-   * 从目标对象获取元数据
-   */
-  get<T>(key: symbol, target: any, propertyKey?: string | symbol): T | undefined {
-    if (propertyKey !== undefined) {
-      // 方法级别元数据
-      return target[METADATA_KEYS.ROUTES]?.[propertyKey]?.[key];
-    } else {
-      // 类级别元数据
-      return target[key];
-    }
-  },
-
-  /**
-   * 获取所有路由方法名
-   */
-  getRouteMethods(target: any): string[] {
-    const routes = target[METADATA_KEYS.ROUTES];
-    return routes ? Object.keys(routes) : [];
+/**
+ * 获取或初始化路由列表
+ */
+export function getRoutes(metadata: DecoratorMetadataObject): RouteInfo[] {
+  if (!metadata[METADATA_KEYS.ROUTES]) {
+    metadata[METADATA_KEYS.ROUTES] = [];
   }
-};
+  return metadata[METADATA_KEYS.ROUTES] as RouteInfo[];
+}
+
+/**
+ * 添加路由信息
+ */
+export function addRoute(metadata: DecoratorMetadataObject, route: RouteInfo): void {
+  getRoutes(metadata).push(route);
+}
+
+/**
+ * 设置控制器前缀
+ */
+export function setPrefix(metadata: DecoratorMetadataObject, prefix: string): void {
+  metadata[METADATA_KEYS.PREFIX] = prefix;
+}
+
+/**
+ * 获取控制器前缀
+ */
+export function getPrefix(metadata: DecoratorMetadataObject | null | undefined): string {
+  return (metadata?.[METADATA_KEYS.PREFIX] as string) || '';
+}
 
 
 
