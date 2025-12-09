@@ -6,65 +6,29 @@ import { getPrefix, getRoutes, type RouteInfo } from '../metadata/constants';
  * 用于自动注册控制器
  */
 export class AppConfig {
-  private static _honoApp: Hono | null = null;
   private static _controllers: any[] = [];
 
   /**
-   * 设置 Hono 应用实例
-   * @param app - Hono 应用实例
-   */
-  static setHonoApp(app: Hono): void {
-    this._honoApp = app;
-    // 如果已经有待注册的控制器，立即注册它们
-    if (this._controllers.length > 0) {
-      console.log(`[AppConfig] 检测到 ${this._controllers.length} 个待注册的控制器，开始自动注册...`);
-      this.registerPendingControllers();
-    }
-  }
-
-  /**
-   * 获取 Hono 应用实例
-   */
-  static getHonoApp(): Hono | null {
-    return this._honoApp;
-  }
-
-  /**
-   * 注册控制器类
-   * 如果 Hono 应用已设置，立即注册；否则加入待注册队列
+   * 注册控制器类到待注册队列
    * @param ControllerClass - 控制器类
    */
   static registerController(ControllerClass: any): void {
-    if (this._honoApp) {
-      // 如果 Hono 应用已设置，立即注册
-      this.registerSingleController(ControllerClass);
-    } else {
-      // 否则加入待注册队列
-      this._controllers.push(ControllerClass);
-      console.log(`[AppConfig] 控制器 ${ControllerClass.name} 已加入待注册队列`);
-    }
+    this._controllers.push(ControllerClass);
+    console.log(`[AppConfig] 控制器 ${ControllerClass.name} 已加入待注册队列`);
   }
 
   /**
-   * 注册所有待注册的控制器
+   * 创建 Hono 应用并注册所有控制器
+   * @param app - Hono 应用实例
    */
-  private static registerPendingControllers(): void {
-    if (this._honoApp) {
-      for (const ControllerClass of this._controllers) {
-        this.registerControllerToApp(this._honoApp, ControllerClass);
-      }
-      this._controllers = []; // 清空队列
-    }
-  }
+  static buildApp(app: Hono): void {
+    console.log(`[AppConfig] 开始注册 ${this._controllers.length} 个控制器...`);
 
-  /**
-   * 注册单个控制器
-   */
-  private static registerSingleController(ControllerClass: any): void {
-    if (this._honoApp) {
-      console.log(`[AppConfig] 自动注册控制器: ${ControllerClass.name}`);
-      this.registerControllerToApp(this._honoApp, ControllerClass);
+    for (const ControllerClass of this._controllers) {
+      this.registerControllerToApp(app, ControllerClass);
     }
+
+    console.log(`[AppConfig] 所有控制器注册完成`);
   }
 
   /**
@@ -155,7 +119,6 @@ export class AppConfig {
    * 重置配置（主要用于测试）
    */
   static reset(): void {
-    this._honoApp = null;
     this._controllers = [];
   }
 }
@@ -177,7 +140,7 @@ export class AppConfig {
  */
 export function useHono(): Hono {
   const app = new Hono();
-  AppConfig.setHonoApp(app);
+  AppConfig.buildApp(app);
   return app;
 }
 
