@@ -18,17 +18,41 @@ export class AppConfig {
   }
 
   /**
-   * 扫描指定目录下的所有控制器文件
-   * 注意：此方法由调用方传入扫描结果，因为 import.meta.glob 必须在调用处使用
-   * @param modules - import.meta.glob 的扫描结果
+   * 递归扫描目录并导入所有 .ts 和 .js 文件
+   * @param dirPath - 目录路径
    */
-  static loadControllers(modules: Record<string, any>): void {
-    const fileCount = Object.keys(modules).length;
-    console.log(`[AppConfig] 加载 ${fileCount} 个控制器文件`);
+  static async scanDirectory(dirPath: string): Promise<void> {
+    const fs = await import('fs');
+    const path = await import('path');
 
-    // 模块已经被导入（eager: true），装饰器已经执行
-    // 控制器已经通过 @RestController 装饰器注册到队列
-    // 这里不需要额外处理
+    if (!fs.existsSync(dirPath)) {
+      console.warn(`[AppConfig] 目录不存在: ${dirPath}`);
+      return;
+    }
+
+    const entries = fs.readdirSync(dirPath, { withFileTypes: true });
+
+    for (const entry of entries) {
+      const fullPath = path.join(dirPath, entry.name);
+
+      if (entry.isDirectory()) {
+        // 递归扫描子目录
+        await this.scanDirectory(fullPath);
+      } else if (entry.isFile()) {
+        // 只处理 .ts 和 .js 文件，排除 .d.ts
+        if ((entry.name.endsWith('.ts') || entry.name.endsWith('.js')) && !entry.name.endsWith('.d.ts')) {
+          console.log(`[AppConfig] 加载文件: ${fullPath}`);
+
+          try {
+            // 动态导入文件
+            await import(fullPath);
+            // 导入后，如果文件中有 @RestController 装饰器，会自动注册
+          } catch (error) {
+            console.error(`[AppConfig] 加载文件失败: ${fullPath}`, error);
+          }
+        }
+      }
+    }
   }
 
   /**
@@ -153,31 +177,69 @@ export class AppConfig {
 
 /**
  * 创建并配置 Hono 应用实例
- * 自动注册所有使用装饰器的控制器
+ * 自动扫描并注册所有使用装饰器的控制器
  *
- * @param options 配置选项
- * @param options.controllers 通过 import.meta.glob 扫描的控制器模块
+ * 类似 Spring Boot 的 @ComponentScan
+ *
+ * 约定优于配置：
+ * - 约定调用位置：src/server/index.ts
+ * - 约定控制器目录：./controllers（相对于 src/server/）
+ * - 支持相对路径（相对于 src/server/）
+ * - 支持绝对路径
+ *
+ * @param packages 包路径数组，支持相对路径和绝对路径
+ *                 - 相对路径：相对于 src/server/ 目录
+ *                 - 绝对路径：直接使用
+ *                 - 默认：['./controllers']
  *
  * @returns 配置好的 Hono 应用实例
  *
  * @example
  * ```typescript
+ * // 文件位置：src/server/index.ts
  * import { useHono } from 'hono-decorator';
  *
- * // 自动扫描 src/server/controllers 下的所有控制器
- * const app = useHono({
- *   controllers: import.meta.glob('./controllers/**\/*.ts', { eager: true })
- * });
+ * // 使用默认配置：扫描 ./controllers（相对于 src/server/）
+ * const app = await useHono();
+ *
+ * // 自定义相对路径（相对于 src/server/）
+ * const app = await useHono(['./controllers', './api']);
+ *
+ * // 使用绝对路径
+ * const app = await useHono(['/absolute/path/to/controllers']);
+ *
+ * export default app;
  * ```
  */
-export function useHono(options?: {
-  controllers?: Record<string, any>;
-}): Hono {
+export async function useHono(packages?: string[]): Promise<Hono> {
   const app = new Hono();
+  const path = await import('path');
 
-  // 如果提供了控制器模块，加载它们
-  if (options?.controllers) {
-    AppConfig.loadControllers(options.controllers);
+  // 默认扫描 ./controllers（相对于 src/server/）
+  const packagePaths = packages || ['./controllers'];
+
+  // 约定的调用位置：src/server/index.ts
+  // 所以基础目录是：项目根目录/src/server
+  const projectRoot = process.cwd();
+  const baseDir = path.resolve(projectRoot, 'src/server');
+
+  console.log(`[useHono] 项目根目录: ${projectRoot}`);
+  console.log(`[useHono] 基础目录: ${baseDir}`);
+  console.log(`[useHono] 扫描包路径: ${packagePaths.join(', ')}`);
+
+  // 处理包路径：相对路径转绝对路径
+  const absolutePaths = packagePaths.map(pkg => {
+    if (path.isAbsolute(pkg)) {
+      return pkg;
+    } else {
+      // 相对路径相对于 src/server/
+      return path.resolve(baseDir, pkg);
+    }
+  });
+
+  // 扫描并加载控制器
+  for (const absolutePath of absolutePaths) {
+    await AppConfig.scanDirectory(absolutePath);
   }
 
   AppConfig.buildApp(app);

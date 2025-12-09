@@ -1,10 +1,12 @@
 import { useHono } from 'hono-decorator';
 
-// 🎉 自动扫描并加载所有控制器
-// 使用 import.meta.glob 扫描 controllers 目录及其所有子目录
-const app = useHono({
-  controllers: import.meta.glob('./controllers/**/*.ts', { eager: true })
-});
+// 🎉 零配置：自动扫描并加载控制器
+// 类似 Spring Boot 的 @ComponentScan
+//
+// 约定：
+// - 此文件位置：src/server/index.ts
+// - 默认扫描：src/server/controllers
+const app = await useHono();
 
 export default app;
 

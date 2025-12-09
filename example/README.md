@@ -38,7 +38,11 @@ npm install
 npm run dev
 ```
 
-访问 http://localhost:5173
+访问：
+- http://localhost:5173 - 前端页面
+- http://localhost:5173/api/hello - API 端点
+- http://localhost:5173/api/test/info - 测试端点
+- http://localhost:5173/api/user/list - 用户列表
 
 ### 构建
 
@@ -58,7 +62,8 @@ npm run build
 
 - **Hono** - 轻量级 Web 框架
 - **hono-decorator** - Spring Boot 风格的装饰器路由
-- **自动注册** - 使用 `useHono()` 自动注册控制器
+- **自动扫描** - 使用 Node.js fs 模块自动扫描控制器
+- **零配置** - 无需手动导入控制器文件
 
 ## 🎯 API 示例
 
