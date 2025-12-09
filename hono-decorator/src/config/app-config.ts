@@ -23,7 +23,7 @@ export class AppConfig {
      * 递归扫描目录并导入所有 .ts 和 .js 文件
      * @param dirPath - 目录路径
      */
-    static scanDirectory(dirPath: string) {
+    static async scanDirectory(dirPath: string): Promise<void> {
         if (!fs.existsSync(dirPath)) {
             console.warn(`[AppConfig] 目录不存在: ${dirPath}`);
             return;
@@ -36,7 +36,7 @@ export class AppConfig {
 
             if (entry.isDirectory()) {
                 // 递归扫描子目录
-                this.scanDirectory(fullPath);
+                await this.scanDirectory(fullPath);
             } else if (entry.isFile()) {
                 // 只处理 .ts 和 .js 文件，排除 .d.ts
                 if ((entry.name.endsWith('.ts') || entry.name.endsWith('.js')) && !entry.name.endsWith('.d.ts')) {
@@ -44,7 +44,7 @@ export class AppConfig {
 
                     try {
                         // 动态导入文件
-                        import(fullPath);
+                        await import(fullPath);
                         // 导入后，如果文件中有 @RestController 装饰器，会自动注册
                     } catch (error) {
                         console.error(`[AppConfig] 加载文件失败: ${fullPath}`, error);
