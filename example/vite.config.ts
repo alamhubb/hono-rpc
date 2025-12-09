@@ -2,6 +2,9 @@ import { defineConfig } from 'vite';
 import devServer, { defaultOptions } from '@hono/vite-dev-server';
 
 export default defineConfig({
+    esbuild: {
+        target: 'es2022',
+    },
     plugins: [
         devServer({
             entry: 'server/server.ts', // Hono 应用入口
