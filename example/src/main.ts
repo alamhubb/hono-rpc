@@ -18,7 +18,21 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     <p class="read-the-docs">
       Click on the Vite and TypeScript logos to learn more
     </p>
+    <div class="card">
+      <h2>API Response:</h2>
+      <p id="api-response">Loading...</p>
+    </div>
   </div>
 `
 
 setupCounter(document.querySelector<HTMLButtonElement>('#counter')!)
+
+// 从 /api/hello 获取数据并显示
+fetch('/api/hello')
+  .then(response => response.text())
+  .then(data => {
+    document.querySelector<HTMLParagraphElement>('#api-response')!.textContent = data
+  })
+  .catch(error => {
+    document.querySelector<HTMLParagraphElement>('#api-response')!.textContent = `Error: ${error.message}`
+  })
