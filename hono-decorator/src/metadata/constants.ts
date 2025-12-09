@@ -1,44 +1,60 @@
 /**
- * 元数据键常量
+ * 元数据键常量（使用 Symbol 确保唯一性）
  */
 export const METADATA_KEYS = {
-  CONTROLLER_PREFIX: 'controller:prefix',
-  CONTROLLER_MIDDLEWARES: 'controller:middlewares',
-  ROUTE_PATH: 'route:path',
-  ROUTE_METHOD: 'route:method',
-  ROUTE_MIDDLEWARES: 'route:middlewares',
-  PARAM_METADATA: 'param:metadata',
+  IS_REST_CONTROLLER: Symbol('is:rest:controller'),
+  CONTROLLER_PREFIX: Symbol('controller:prefix'),
+  ROUTE_PATH: Symbol('route:path'),
+  ROUTE_METHOD: Symbol('route:method'),
+  HAS_BODY: Symbol('has:body'),
+  ROUTES: Symbol('routes'),
 } as const;
 
 /**
- * 参数类型枚举
+ * 元数据存储工具
+ * 用于在类和方法上存储和读取元数据（替代 reflect-metadata）
  */
-export enum ParamType {
-  CONTEXT = 'context',
-  QUERY = 'query',
-  PARAM = 'param',
-  BODY = 'body',
-  HEADER = 'header',
-  COOKIE = 'cookie',
-  REQUEST = 'request',
-}
+export const MetadataStorage = {
+  /**
+   * 在目标对象上定义元数据
+   */
+  define<T>(key: symbol, value: T, target: any, propertyKey?: string | symbol): void {
+    if (propertyKey !== undefined) {
+      // 方法级别元数据
+      if (!target[METADATA_KEYS.ROUTES]) {
+        target[METADATA_KEYS.ROUTES] = {};
+      }
+      if (!target[METADATA_KEYS.ROUTES][propertyKey]) {
+        target[METADATA_KEYS.ROUTES][propertyKey] = {};
+      }
+      target[METADATA_KEYS.ROUTES][propertyKey][key] = value;
+    } else {
+      // 类级别元数据
+      target[key] = value;
+    }
+  },
 
-/**
- * 参数元数据接口
- */
-export interface ParamMetadata {
-  index: number;        // 参数在方法中的索引位置
-  type: ParamType;      // 参数类型
-  key?: string;         // 参数键名（如 query key, param name）
-}
+  /**
+   * 从目标对象获取元数据
+   */
+  get<T>(key: symbol, target: any, propertyKey?: string | symbol): T | undefined {
+    if (propertyKey !== undefined) {
+      // 方法级别元数据
+      return target[METADATA_KEYS.ROUTES]?.[propertyKey]?.[key];
+    } else {
+      // 类级别元数据
+      return target[key];
+    }
+  },
 
-/**
- * 路由元数据接口
- */
-export interface RouteMetadata {
-  path: string;
-  method: string;
-  methodName: string;
-  paramMetadata: ParamMetadata[];
-}
+  /**
+   * 获取所有路由方法名
+   */
+  getRouteMethods(target: any): string[] {
+    const routes = target[METADATA_KEYS.ROUTES];
+    return routes ? Object.keys(routes) : [];
+  }
+};
+
+
 

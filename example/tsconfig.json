@@ -10,8 +10,7 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
+
     "types": ["node"]
   },
   "include": ["src/**/*", "server.ts"],

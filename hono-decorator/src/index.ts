@@ -1,16 +1,12 @@
 /**
  * hono-decorator
- * Decorator-based routing for Hono
+ * Spring Boot 风格的装饰器路由 for Hono (Stage 3 Decorators)
  */
 
 // 导出装饰器
-export { Controller } from './decorators/controller';
-export { Get, Post, Put, Delete, Patch, All } from './decorators/http-methods';
-export { Ctx, Query, Param, Body, Header, Cookie, Req } from './decorators/params';
+export { RestController, RequestMapping } from './decorators/controller';
+export { GetMapping, PostMapping } from './decorators/http-methods';
 
 // 导出构建器
 export { RouteBuilder } from './builder/route-builder';
-
-// 导出类型
-export { ParamType } from './metadata/constants';
 

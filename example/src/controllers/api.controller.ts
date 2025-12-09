@@ -1,22 +1,22 @@
-import 'reflect-metadata';
-import { Controller, Get, Post, Query, Body } from '../../../hono-decorator/src/index';
+import { RestController, RequestMapping, GetMapping, PostMapping } from '../../../hono-decorator/src/index';
 import { getUsers } from '../db/queries';
+import type { Context } from 'hono';
 
 /**
  * API 控制器
  * 处理所有 /api 路由
  */
-@Controller('/api')
+@RestController
+@RequestMapping('/api')
 export class ApiController {
   /**
    * 获取用户列表（分页）
    * GET /api/users?offset=0&limit=10
    */
-  @Get('/users')
-  async getUsers(
-    @Query('offset') offsetStr,
-    @Query('limit') limitStr
-  ) {
+  @GetMapping('/users')
+  async getUsers(c: Context) {
+    const offsetStr = c.req.query('offset');
+    const limitStr = c.req.query('limit');
     const offset = parseInt(offsetStr || '0') || 0;
     const limit = parseInt(limitStr || '10') || 10;
 
@@ -28,23 +28,24 @@ export class ApiController {
 
       return {
         success: true,
-        users,  // 🔑 返回用户数据数组
+        users,
         count: users.length,
         offset,
         limit,
       };
     } catch (error) {
       console.error('[API] 查询失败:', error);
-      throw error; // RouteBuilder 会自动处理错误
+      throw error;
     }
   }
 
   /**
    * 点赞接口
    * POST /api/like
+   * body 自动注入（相当于 @RequestBody）
    */
-  @Post('/like')
-  async like(@Body() body) {
+  @PostMapping('/like')
+  async like(body: { userId: string; nickname: string }, c: Context) {
     const { userId, nickname } = body;
 
     console.log(

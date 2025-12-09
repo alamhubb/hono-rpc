@@ -1,5 +1,4 @@
-import 'reflect-metadata';
-import { Controller, Get, Ctx } from '../../../hono-decorator/src/index';
+import { RestController, RequestMapping, GetMapping } from '../../../hono-decorator/src/index';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import type { Context } from 'hono';
@@ -8,27 +7,27 @@ import type { Context } from 'hono';
  * SSR 控制器
  * 处理服务端渲染
  */
-@Controller('')
+@RestController
+@RequestMapping('')
 export class SsrController {
   /**
    * SSR 路由：渲染首页
    * GET /
    */
-  @Get('/')
-  async renderIndex(@Ctx() c: Context) {
+  @GetMapping('/')
+  async renderIndex(c: Context) {
     try {
       // 1. 读取 index.html 模板
       let template = readFileSync(resolve('index.html'), 'utf-8');
 
       // 2. 获取 Vite 实例并处理 HTML（注入 HMR 客户端等）
-      // Vite 实例由 @hono/vite-dev-server 插件注入到 context 中
       const vite = c.get('vite');
       if (vite) {
         template = await vite.transformIndexHtml('/', template);
       }
 
       // 3. 加载服务端入口模块
-      const { renderApp } = vite 
+      const { renderApp } = vite
         ? await vite.ssrLoadModule('/src/entry-server.js')
         : await import('../entry-server.js');
 
@@ -41,9 +40,9 @@ export class SsrController {
       // 6. 替换占位符
       const html = template.replace('<!--ssr-outlet-->', appHtml + stateScript);
 
-      // 7. 返回 HTML（使用 c.html 而不是 return，因为需要返回 Response 对象）
+      // 7. 返回 HTML
       return c.html(html);
-    } catch (e) {
+    } catch (e: any) {
       console.error('[SSR] 渲染错误:', e);
       return c.text(e.message, 500);
     }
