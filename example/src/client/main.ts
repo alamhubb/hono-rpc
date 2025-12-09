@@ -36,3 +36,4 @@ fetch('/api/hello')
   .catch(error => {
     document.querySelector<HTMLParagraphElement>('#api-response')!.textContent = `Error: ${error.message}`
   })
+

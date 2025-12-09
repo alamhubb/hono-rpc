@@ -22,7 +22,6 @@
     "noUncheckedSideEffectImports": true
   },
   "include": [
-    "src",
-    "server"
+    "src"
   ]
 }
