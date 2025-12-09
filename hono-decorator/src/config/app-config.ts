@@ -18,6 +18,20 @@ export class AppConfig {
   }
 
   /**
+   * 扫描指定目录下的所有控制器文件
+   * 注意：此方法由调用方传入扫描结果，因为 import.meta.glob 必须在调用处使用
+   * @param modules - import.meta.glob 的扫描结果
+   */
+  static loadControllers(modules: Record<string, any>): void {
+    const fileCount = Object.keys(modules).length;
+    console.log(`[AppConfig] 加载 ${fileCount} 个控制器文件`);
+
+    // 模块已经被导入（eager: true），装饰器已经执行
+    // 控制器已经通过 @RestController 装饰器注册到队列
+    // 这里不需要额外处理
+  }
+
+  /**
    * 创建 Hono 应用并注册所有控制器
    * @param app - Hono 应用实例
    */
@@ -141,19 +155,31 @@ export class AppConfig {
  * 创建并配置 Hono 应用实例
  * 自动注册所有使用装饰器的控制器
  *
+ * @param options 配置选项
+ * @param options.controllers 通过 import.meta.glob 扫描的控制器模块
+ *
  * @returns 配置好的 Hono 应用实例
  *
  * @example
  * ```typescript
  * import { useHono } from 'hono-decorator';
- * import './controllers/HelloController';
  *
- * const app = useHono();
- * export default app;
+ * // 自动扫描 src/server/controllers 下的所有控制器
+ * const app = useHono({
+ *   controllers: import.meta.glob('./controllers/**\/*.ts', { eager: true })
+ * });
  * ```
  */
-export function useHono(): Hono {
+export function useHono(options?: {
+  controllers?: Record<string, any>;
+}): Hono {
   const app = new Hono();
+
+  // 如果提供了控制器模块，加载它们
+  if (options?.controllers) {
+    AppConfig.loadControllers(options.controllers);
+  }
+
   AppConfig.buildApp(app);
   return app;
 }
