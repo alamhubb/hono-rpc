@@ -5,8 +5,8 @@ import type { Context } from 'hono';
 @RequestMapping('/api')
 export class HelloController {
   @GetMapping('/hello')
-  hello(c: Context) {
-    return c.text('Hello World');
+  static hello(c: Context) {
+    return c.text('Hello World from static method');
   }
 }
 

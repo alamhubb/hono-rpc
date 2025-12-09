@@ -50,7 +50,7 @@ export class AppConfig {
     console.log(`[RestController] ${ControllerClass.name} -> ${prefix || '/'}`);
 
     for (const route of routes) {
-      this.registerRoute(app, instance, route, prefix);
+      this.registerRoute(app, ControllerClass, instance, route, prefix);
     }
   }
 
@@ -59,6 +59,7 @@ export class AppConfig {
    */
   private static registerRoute(
     app: Hono,
+    ControllerClass: any,
     instance: any,
     route: RouteInfo,
     prefix: string
@@ -68,31 +69,44 @@ export class AppConfig {
     // 构建完整路径
     const fullPath = (prefix + path) || '/';
 
+    // 检查是否为静态方法
+    const isStatic = typeof ControllerClass[methodName] === 'function';
+
     // 创建 Hono 处理函数
-    const handler = this.createHandler(instance, methodName, hasBody);
+    const handler = this.createHandler(ControllerClass, instance, methodName, hasBody, isStatic);
 
     // 注册路由到 Hono
     const method = httpMethod.toLowerCase();
     (app as any)[method](fullPath, handler);
 
-    console.log(`  ├─ ${httpMethod.padEnd(6)} ${fullPath} -> ${methodName}()`);
+    const methodType = isStatic ? 'static' : 'instance';
+    console.log(`  ├─ ${httpMethod.padEnd(6)} ${fullPath} -> ${methodName}() [${methodType}]`);
   }
 
   /**
    * 创建 Hono 路由处理函数
    */
-  private static createHandler(instance: any, methodName: string, hasBody: boolean) {
+  private static createHandler(
+    ControllerClass: any,
+    instance: any,
+    methodName: string,
+    hasBody: boolean,
+    isStatic: boolean
+  ) {
     return async (c: Context) => {
       try {
         let result: any;
 
+        // 根据是否为静态方法选择调用方式
+        const target = isStatic ? ControllerClass : instance;
+
         if (hasBody) {
           // POST 等方法：解析 body 作为第一个参数，Context 作为第二个参数
           const body = await c.req.json();
-          result = await instance[methodName](body, c);
+          result = await target[methodName](body, c);
         } else {
           // GET 等方法：只传 Context
-          result = await instance[methodName](c);
+          result = await target[methodName](c);
         }
 
         // 如果结果已经是 Response 对象，直接返回
