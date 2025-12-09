@@ -4,7 +4,7 @@ import devServer from '@hono/vite-dev-server';
 export default defineConfig({
   plugins: [
     devServer({
-      entry: 'server.js', // Hono 应用入口
+      entry: 'server.ts', // Hono 应用入口
     }),
   ],
 });
