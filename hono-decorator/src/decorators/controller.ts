@@ -1,5 +1,5 @@
-import { setPrefix } from '../metadata/constants';
-import { AppConfig } from '../config/app-config';
+import { setPrefix } from '../metadata/constants.ts';
+import { AppConfig } from '../config/app-config.ts';
 
 /**
  * RestController 装饰器（TC39 Stage 3 Symbol.metadata 标准）
