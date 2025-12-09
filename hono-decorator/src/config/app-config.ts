@@ -2,6 +2,7 @@ import {Hono, type Context} from 'hono';
 import {getPrefix, getRoutes, type RouteInfo} from '../metadata/constants';
 import path from 'path';
 import fs from 'fs';
+import { pathToFileURL } from 'url';
 
 /**
  * 全局应用配置
@@ -44,7 +45,10 @@ export class AppConfig {
 
                     try {
                         // 动态导入文件
-                        await import(fullPath);
+                        // 在 Windows 上需要转换为 file:// URL
+                        const fileUrl = pathToFileURL(fullPath).href;
+                        console.log(`[AppConfig] 导入 URL: ${fileUrl}`);
+                        await import(fileUrl);
                         // 导入后，如果文件中有 @RestController 装饰器，会自动注册
                     } catch (error) {
                         console.error(`[AppConfig] 加载文件失败: ${fullPath}`, error);
