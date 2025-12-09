@@ -3,7 +3,7 @@ import devServer, { defaultOptions } from '@hono/vite-dev-server';
 
 export default defineConfig({
     esbuild: {
-        target: 'es2022',
+        target: 'es2024',
     },
     plugins: [
         devServer({
