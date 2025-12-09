@@ -17,7 +17,7 @@ export class UserController {
     { id: 3, name: 'Charlie', email: 'charlie@example.com' }
   ];
 
-  @GetMapping('/')
+  @GetMapping('')
   static getAllUsers(c: Context) {
     return c.json({
       success: true,
@@ -38,7 +38,7 @@ export class UserController {
     return c.json({ success: true, data: user });
   }
 
-  @PostMapping('/')
+  @PostMapping('')
   static async createUser(body: User, c: Context) {
     const newUser: User = {
       id: this.users.length + 1,
