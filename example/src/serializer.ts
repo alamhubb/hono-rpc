@@ -16,7 +16,7 @@
  */
 
 // 类型前缀定义
-const TYPE_PREFIX = {
+export const TYPE_PREFIX = {
   NUMBER: 'n:',
   STRING: 's:',
   BOOLEAN: 'b:',
@@ -26,14 +26,20 @@ const TYPE_PREFIX = {
   NULL: 'l:',
   DATE: 'd:',
   REGEXP: 'r:',
-};
+} as const;
+
+/**
+ * 检查字符串是否看起来像带类型的值
+ */
+function looksLikeTypedValue(str: string): boolean {
+  const prefixes = Object.values(TYPE_PREFIX);
+  return prefixes.some(prefix => str.startsWith(prefix));
+}
 
 /**
  * 序列化值为字符串
- * @param {any} value - 要序列化的值
- * @returns {string} - 序列化后的字符串
  */
-export function serialize(value) {
+export function serialize(value: unknown): string {
   // null
   if (value === null) {
     return TYPE_PREFIX.NULL;
@@ -48,11 +54,11 @@ export function serialize(value) {
   
   // number
   if (type === 'number') {
-    // 处理特殊数字
-    if (Number.isNaN(value)) return `${TYPE_PREFIX.NUMBER}NaN`;
-    if (value === Infinity) return `${TYPE_PREFIX.NUMBER}Infinity`;
-    if (value === -Infinity) return `${TYPE_PREFIX.NUMBER}-Infinity`;
-    return `${TYPE_PREFIX.NUMBER}${value}`;
+    const num = value as number;
+    if (Number.isNaN(num)) return `${TYPE_PREFIX.NUMBER}NaN`;
+    if (num === Infinity) return `${TYPE_PREFIX.NUMBER}Infinity`;
+    if (num === -Infinity) return `${TYPE_PREFIX.NUMBER}-Infinity`;
+    return `${TYPE_PREFIX.NUMBER}${num}`;
   }
   
   // boolean
@@ -62,11 +68,11 @@ export function serialize(value) {
   
   // string - 需要检查是否会与类型前缀冲突
   if (type === 'string') {
-    // 如果字符串本身以类型前缀开头，需要加 s: 前缀
-    if (looksLikeTypedValue(value)) {
-      return `${TYPE_PREFIX.STRING}${value}`;
+    const str = value as string;
+    if (looksLikeTypedValue(str)) {
+      return `${TYPE_PREFIX.STRING}${str}`;
     }
-    return value; // 普通字符串直接返回
+    return str;
   }
   
   // Date
@@ -95,10 +101,8 @@ export function serialize(value) {
 
 /**
  * 反序列化字符串为原始值
- * @param {string} str - 序列化的字符串
- * @returns {any} - 反序列化后的值
  */
-export function deserialize(str) {
+export function deserialize(str: string): unknown {
   if (typeof str !== 'string') return str;
   
   // null
@@ -157,15 +161,4 @@ export function deserialize(str) {
   // 普通字符串
   return str;
 }
-
-/**
- * 检查字符串是否看起来像带类型的值
- */
-function looksLikeTypedValue(str) {
-  const prefixes = Object.values(TYPE_PREFIX);
-  return prefixes.some(prefix => str.startsWith(prefix));
-}
-
-// 导出类型前缀常量（可选）
-export { TYPE_PREFIX };
 

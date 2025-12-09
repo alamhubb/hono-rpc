@@ -27,3 +27,6 @@ export const sUser = mysqlTable('s_user', {
   roleId: varchar('role_id', { length: 255 }),
 });
 
+/** 用户类型 */
+export type User = typeof sUser.$inferSelect;
+

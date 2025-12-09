@@ -1,27 +1,33 @@
-import { deserialize, serialize } from './serializer.js';
+import { deserialize, serialize } from './serializer';
+import type { Signal } from 'alien-signals';
 
 /**
- * 事件处理器模块 - Resumable + 响应式
- *
- * 🔑 核心思想：
- * 1. 第一次交互：从 data-{name} 读取序列化状态 → deserialize → 懒创建 signal
- * 2. 之后的交互：直接更新 signal，effect 自动更新所有绑定的 DOM
+ * 事件处理器上下文
  */
+export interface HandlerContext {
+  event?: Event;
+  element?: HTMLElement;
+  offset?: number;
+  limit?: number;
+  getOrCreateSignal: (name: string, value: unknown) => Promise<Signal<unknown>>;
+  setupSignalBindings: (name: string, sig: Signal<unknown>, formatter?: (v: unknown) => string) => Promise<void>;
+  lazySignals: Map<string, Signal<unknown>>;
+}
 
 /**
  * 点赞用户
  */
-export async function likeUser(context) {
+export async function likeUser(context: HandlerContext): Promise<void> {
   const { element, getOrCreateSignal, setupSignalBindings, lazySignals } = context;
+  if (!element) return;
 
-  // 获取用户信息
   const userId = element.dataset.userId;
   const nickname = element.dataset.nickname;
   const signalName = `like_${userId}`;
 
   console.log(`[Handler] 点赞用户: ${nickname} (ID: ${userId})`);
 
-  // 🔑 调用后端接口
+  // 调用后端接口
   try {
     const response = await fetch('/api/like', {
       method: 'POST',
@@ -34,72 +40,42 @@ export async function likeUser(context) {
     console.error(`[Handler] 调用接口失败:`, error);
   }
 
-  // 🔑 查找或创建 signal
-  let likeSignal = lazySignals.get(signalName);
+  // 查找或创建 signal
+  let likeSignal = lazySignals.get(signalName) as Signal<number> | undefined;
 
   if (!likeSignal) {
     // 第一次点击，懒创建 signal
-    const likeEl = element.querySelector(`[data-like_${userId}]`) ||
-                   element.querySelector(`[data-like_${userId.toLowerCase()}]`);
+    const likeEl = element.querySelector(`[data-like_${userId}]`) as HTMLElement | null;
 
-    // 从 data 属性读取初始值
     let initialValue = 0;
     if (likeEl) {
       const attr = Object.keys(likeEl.dataset).find(k => k.startsWith('like_'));
       if (attr) {
-        initialValue = deserialize(likeEl.dataset[attr]);
+        initialValue = deserialize(likeEl.dataset[attr] || '0') as number;
       }
     }
 
     console.log(`[Handler] 懒创建 signal: ${signalName} = ${initialValue}`);
-    likeSignal = await getOrCreateSignal(signalName, initialValue);
+    likeSignal = await getOrCreateSignal(signalName, initialValue) as Signal<number>;
 
-    // 建立响应式绑定
-    await setupSignalBindings(signalName, likeSignal, (v) => `${v}`);
+    await setupSignalBindings(signalName, likeSignal as Signal<unknown>, (v) => `${v}`);
   }
 
-  // 🔑 更新点赞数
-  const newValue = likeSignal() + 1;
+  // 更新点赞数
+  const newValue = (likeSignal() as number) + 1;
   likeSignal(newValue);
   console.log(`[Handler] 点赞数更新: ${nickname} → ${newValue}`);
 }
 
 /**
- * 增加计数器（保留原有功能）
- */
-export async function incrementCount(context) {
-  const { element, getOrCreateSignal, setupSignalBindings, lazySignals } = context;
-
-  let countSignal = lazySignals.get('count');
-
-  if (!countSignal) {
-    console.log('[Handler] 第一次点击 → 初始化响应式系统');
-
-    const countEl = element.querySelector('[data-count]') || element;
-    const serializedValue = countEl.dataset.count;
-    const initialValue = deserialize(serializedValue);
-
-    console.log(`[Handler] 从 data-count 读取: "${serializedValue}" → ${initialValue}`);
-
-    countSignal = await getOrCreateSignal('count', initialValue);
-    await setupSignalBindings('count', countSignal, (v) => `count is ${v}`);
-  }
-
-  const newValue = countSignal() + 1;
-  countSignal(newValue);
-  console.log(`[Handler] signal 更新: count = ${newValue}`);
-}
-
-/**
  * 加载更多用户
  */
-export async function loadMoreUsers(context) {
-  const { offset, limit, getOrCreateSignal, setupSignalBindings, lazySignals } = context;
+export async function loadMoreUsers(context: HandlerContext): Promise<void> {
+  const { offset = 0, limit = 10, getOrCreateSignal, setupSignalBindings } = context;
 
   console.log(`[Handler] 加载更多用户: offset=${offset}, limit=${limit}`);
 
   try {
-    // 1. 调用后端接口
     const response = await fetch(`/api/users?offset=${offset}&limit=${limit}`);
     const result = await response.json();
 
@@ -110,21 +86,16 @@ export async function loadMoreUsers(context) {
 
     console.log(`[Handler] 获取到 ${result.users.length} 条新数据`);
 
-    // 2. 找到用户列表容器
-    const container = document.querySelector('.user-list') ||
-                      document.querySelector('[style*="padding:0 20px"]');
-
+    const container = document.querySelector('.user-list');
     if (!container) {
       console.error('[Handler] 找不到用户列表容器');
       return;
     }
 
-    // 3. 为每个新用户创建 DOM 并追加
     for (const user of result.users) {
       const userCard = createUserCardHTML(user);
       container.insertAdjacentHTML('beforeend', userCard);
 
-      // 4. 为新添加的点赞按钮设置响应式
       const signalName = `like_${user.id}`;
       const likeSignal = await getOrCreateSignal(signalName, 0);
       await setupSignalBindings(signalName, likeSignal, (v) => `${v}`);
@@ -140,11 +111,8 @@ export async function loadMoreUsers(context) {
 /**
  * 创建用户卡片 HTML
  */
-function createUserCardHTML(user) {
+function createUserCardHTML(user: { id: number; nickname?: string; avatar?: string; age?: number; gender?: string; city?: string }): string {
   const genderEmoji = user.gender === 'girl' ? '👩' : '👨';
-  const statusStyle = user.status === '正常'
-    ? 'background:#e8f5e9;color:#2e7d32'
-    : 'background:#ffebee;color:#c62828';
 
   return `
     <div class="user-card" style="display:flex;align-items:center;padding:12px;margin:8px 0;background:#f5f5f5;border-radius:8px;">

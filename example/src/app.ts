@@ -1,32 +1,47 @@
-import { serialize } from './serializer.js';
-
 /**
- * 创建应用 - Resumable + 响应式 SSR + 数据库
+ * 创建应用 - 纯客户端渲染 (CSR) 模式
  */
 
-/**
- * 创建带 signal 绑定的动态内容
- */
-export function bindSignal(signalName, value, formatter = (v) => v) {
-  const fn = () => formatter(value);
-  fn._signalMeta = {
-    name: signalName,
-    value,
-    serialized: serialize(value)
-  };
-  return fn;
+/** 元素属性接口 */
+export interface ElementProps {
+  class?: string;
+  style?: string;
+  id?: string;
+  children?: (string | number | Node)[];
+  onclick?: () => void;
+  [key: string]: unknown;
+}
+
+/** 元素创建函数类型 */
+export type ElementCreator = (props: ElementProps) => HTMLElement;
+
+/** 组件工厂接口 */
+export interface ComponentFactory {
+  div: ElementCreator;
+  button: ElementCreator;
+  span: ElementCreator;
+  img: ElementCreator;
+}
+
+/** 用户数据接口 */
+export interface UserData {
+  id: number;
+  nickname: string | null;
+  avatar: string | null;
+  age: number | null;
+  gender: string | null;
+  city: string | null;
 }
 
 /**
  * 创建用户卡片组件
  */
-function UserCard({ div, img, span, button }, user) {
-  // 🔑 点赞事件处理器
-  const handleLike = () => {};
-  handleLike._handlerName = 'likeUser';
-
-  // 🔑 绑定点赞数（初始为 0）
-  const likeCount = bindSignal(`like_${user.id}`, 0, (v) => `${v}`);
+function UserCard(factory: ComponentFactory, user: UserData): HTMLElement {
+  const { div, img, span, button } = factory;
+  
+  // 点赞处理器标记
+  const handleLike = (): void => {};
+  (handleLike as any)._handlerName = 'likeUser';
 
   return div({
     class: 'user-card',
@@ -35,7 +50,7 @@ function UserCard({ div, img, span, button }, user) {
       // 头像
       img({
         src: user.avatar || 'https://via.placeholder.com/50',
-        alt: user.nickname,
+        alt: user.nickname || '',
         style: 'width:50px;height:50px;border-radius:50%;margin-right:12px;object-fit:cover;'
       }),
       // 用户信息
@@ -56,16 +71,19 @@ function UserCard({ div, img, span, button }, user) {
           })
         ]
       }),
-      // 🔑 点赞按钮
+      // 点赞按钮
       button({
         type: 'button',
         'data-user-id': user.id,
-        'data-nickname': user.nickname,
-        onclick: handleLike,
+        'data-nickname': user.nickname || '',
+        'data-onclick': 'likeUser',
         style: 'display:flex;align-items:center;gap:4px;padding:8px 12px;border:none;background:#fff;border-radius:20px;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.1);',
         children: [
           span({ style: 'font-size:18px;', children: ['👍'] }),
-          span({ children: [likeCount] })
+          span({ 
+            [`data-like_${user.id}`]: 'n:0',
+            children: ['0'] 
+          })
         ]
       })
     ]
@@ -75,11 +93,9 @@ function UserCard({ div, img, span, button }, user) {
 /**
  * 创建应用
  */
-export function createApp({ div, button, span, img }, data = {}) {
+export function createApp(factory: ComponentFactory, data: { users?: UserData[] } = {}): HTMLElement {
+  const { div, span } = factory;
   const { users = [] } = data;
-
-  // 绑定用户列表数据
-  const usersDisplay = bindSignal('users', users, (v) => `${v.length} 位用户`);
 
   return div({
     children: [
@@ -93,17 +109,21 @@ export function createApp({ div, button, span, img }, data = {}) {
           }),
           div({
             style: 'color:#666;margin-bottom:16px;',
-            children: ['数据来自 MySQL 数据库 (Drizzle ORM) - ', span({ children: [usersDisplay] }), ' · 点击 👍 点赞']
+            children: [
+              '数据来自 MySQL 数据库 (Drizzle ORM) - ',
+              span({ children: [`${users.length} 位用户`] }),
+              ' · 点击 👍 点赞'
+            ]
           })
         ]
       }),
 
       // 用户列表
       div({
-        class: 'user-list',  // 🔑 添加 class 便于查找
+        class: 'user-list',
         style: 'padding:0 20px;',
         children: users.length > 0
-          ? users.map(user => UserCard({ div, img, span, button }, user))
+          ? users.map(user => UserCard(factory, user))
           : [div({
               style: 'text-align:center;padding:40px;color:#999;',
               children: ['暂无用户数据']

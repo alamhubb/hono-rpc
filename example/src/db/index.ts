@@ -1,8 +1,8 @@
 /**
  * Drizzle ORM 数据库配置
  */
-import { drizzle } from 'drizzle-orm/mysql2';
-import mysql from 'mysql2/promise';
+import { drizzle, MySql2Database } from 'drizzle-orm/mysql2';
+import mysql, { Pool } from 'mysql2/promise';
 
 // 数据库连接配置
 const dbConfig = {
@@ -16,13 +16,13 @@ const dbConfig = {
 };
 
 // 创建连接池
-let pool = null;
-let db = null;
+let pool: Pool | null = null;
+let db: MySql2Database | null = null;
 
 /**
  * 获取数据库连接
  */
-export async function getDb() {
+export async function getDb(): Promise<MySql2Database> {
   if (!db) {
     pool = mysql.createPool(dbConfig);
     db = drizzle(pool);
@@ -34,7 +34,7 @@ export async function getDb() {
 /**
  * 获取连接池（用于原生查询）
  */
-export async function getPool() {
+export async function getPool(): Promise<Pool> {
   if (!pool) {
     pool = mysql.createPool(dbConfig);
     console.log('[DB] 连接池已创建');
@@ -45,7 +45,7 @@ export async function getPool() {
 /**
  * 关闭数据库连接
  */
-export async function closeDb() {
+export async function closeDb(): Promise<void> {
   if (pool) {
     await pool.end();
     pool = null;
