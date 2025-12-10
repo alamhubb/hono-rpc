@@ -1,64 +1,98 @@
 /**
- * Symbol.metadata Polyfill
- * TC39 Stage 3 Decorator Metadata 标准
- * https://github.com/tc39/proposal-decorator-metadata
+ * Legacy Decorators Metadata Constants
+ * 使用 reflect-metadata 进行元数据存储
  */
-(Symbol as any).metadata ??= Symbol('Symbol.metadata');
+import 'reflect-metadata';
 
 /**
- * 元数据键常量（使用 Symbol 确保唯一性和私有性）
+ * 元数据键常量（使用字符串键）
  */
 export const METADATA_KEYS = {
+  // 类级别
+  /** 控制器配置 */
+  CONTROLLER: 'hono:controller',
   /** 控制器路由前缀 */
-  PREFIX: Symbol('hono:prefix'),
+  PREFIX: 'hono:prefix',
+  /** CORS 配置 */
+  CORS: 'hono:cors',
+  /** 全局异常处理器标记 */
+  CONTROLLER_ADVICE: 'hono:controllerAdvice',
+
+  // 方法级别
   /** 路由列表 */
-  ROUTES: Symbol('hono:routes'),
+  ROUTES: 'hono:routes',
+  /** 响应状态码 */
+  RESPONSE_STATUS: 'hono:responseStatus',
+  /** 响应头 */
+  RESPONSE_HEADERS: 'hono:responseHeaders',
+  /** 异常处理器 */
+  EXCEPTION_HANDLER: 'hono:exceptionHandler',
+
+  // 参数级别
+  /** 参数元数据 */
+  PARAMS: 'hono:params',
 } as const;
 
 /**
- * 路由信息接口
+ * 参数类型枚举
  */
-export interface RouteInfo {
-  /** 方法名 */
-  methodName: string;
-  /** 路由路径 */
+export enum ParamType {
+  PATH_VARIABLE = 'path',
+  REQUEST_PARAM = 'query',
+  REQUEST_HEADER = 'header',
+  REQUEST_BODY = 'body',
+  COOKIE_VALUE = 'cookie',
+  CONTEXT = 'context',
+}
+
+/**
+ * 参数元数据接口
+ */
+export interface ParamMetadata {
+  type: ParamType;
+  index: number;
+  name?: string;
+  required?: boolean;
+  defaultValue?: any;
+}
+
+/**
+ * 路由元数据接口
+ */
+export interface RouteMetadata {
   path: string;
-  /** HTTP 方法 */
   httpMethod: string;
-  /** 是否需要解析请求体 */
-  hasBody: boolean;
+  methodName: string;
+  consumes?: string;
+  produces?: string;
 }
 
 /**
- * 获取或初始化路由列表
+ * CORS 配置接口
  */
-export function getRoutes(metadata: DecoratorMetadataObject): RouteInfo[] {
-  if (!metadata[METADATA_KEYS.ROUTES]) {
-    metadata[METADATA_KEYS.ROUTES] = [];
-  }
-  return metadata[METADATA_KEYS.ROUTES] as RouteInfo[];
+export interface CorsOptions {
+  origin?: string | string[];
+  methods?: string[];
+  allowedHeaders?: string[];
+  exposedHeaders?: string[];
+  credentials?: boolean;
+  maxAge?: number;
 }
 
 /**
- * 添加路由信息
+ * 响应状态元数据接口
  */
-export function addRoute(metadata: DecoratorMetadataObject, route: RouteInfo): void {
-  getRoutes(metadata).push(route);
+export interface ResponseStatusMetadata {
+  code: number;
+  reason?: string;
 }
 
 /**
- * 设置控制器前缀
+ * 控制器配置接口
  */
-export function setPrefix(metadata: DecoratorMetadataObject, prefix: string): void {
-  metadata[METADATA_KEYS.PREFIX] = prefix;
+export interface ControllerOptions {
+  isRestController: boolean;
 }
 
-/**
- * 获取控制器前缀
- */
-export function getPrefix(metadata: DecoratorMetadataObject | null | undefined): string {
-  return (metadata?.[METADATA_KEYS.PREFIX] as string) || '';
-}
-
-
-
+// 保留向后兼容的 RouteInfo 接口（别名）
+export type RouteInfo = RouteMetadata & { hasBody?: boolean };

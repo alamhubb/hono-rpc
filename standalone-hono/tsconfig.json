@@ -15,7 +15,8 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "experimentalDecorators": false,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "paths": {
       "hono-class": ["../hono-class/src"]
     }

@@ -18,12 +18,20 @@
   ],
   "author": "",
   "license": "MIT",
+  "dependencies": {
+    "reflect-metadata": "^0.2.2"
+  },
   "peerDependencies": {
     "hono": "^4.0.0"
   },
+  "scripts": {
+    "test": "vitest run"
+  },
   "devDependencies": {
     "typescript": "^5.0.0",
-    "@types/node": "^24.10.1"
+    "@types/node": "^24.10.1",
+    "vitest": "^3.2.3",
+    "fast-check": "^4.1.1"
   }
 }
 

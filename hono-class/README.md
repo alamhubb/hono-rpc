@@ -1,19 +1,20 @@
 # hono-class
 
-🎨 Spring Boot 风格的装饰器路由框架，基于 [Hono](https://hono.dev/) 和 **TC39 Stage 3 装饰器标准**。
+🎨 Spring Boot 风格的装饰器路由框架，基于 [Hono](https://hono.dev/) 和 **Legacy Decorators (experimentalDecorators)**。
 
 ## ✨ 特性
 
 - 🎯 **Spring Boot 风格** - `@RestController`、`@GetMapping`、`@PostMapping` 熟悉的命名
-- 🚀 **TC39 Stage 3 标准** - 使用官方 `Symbol.metadata` 提案，面向未来
-- 🔥 **零依赖** - 不需要 `reflect-metadata`，无额外依赖
-- 📦 **轻量级** - 代码精简，性能优先
-- 🛡️ **类型安全** - TypeScript 5.2+ 原生支持
+- 🔧 **参数装饰器** - `@PathVariable`、`@RequestParam`、`@RequestBody`、`@RequestHeader` 等
+- 🛡️ **异常处理** - `@ControllerAdvice`、`@ExceptionHandler` 全局异常处理
+- 📦 **响应状态** - `@ResponseStatus` 自定义 HTTP 状态码
+- 🌐 **CORS 支持** - `@CrossOrigin` 跨域配置
+- 🔥 **自动扫描** - `useHono()` 自动扫描并注册控制器
 
 ## 📦 安装
 
 ```bash
-npm install hono
+npm install hono reflect-metadata
 # hono-class 目前作为本地包使用
 ```
 
@@ -21,16 +22,16 @@ npm install hono
 
 ### 1. 配置 TypeScript
 
-确保 `tsconfig.json` 不包含旧版装饰器配置（我们使用 Stage 3 标准）：
+确保 `tsconfig.json` 启用旧版装饰器：
 
 ```json
 {
   "compilerOptions": {
     "target": "ES2022",
     "module": "ESNext",
-    "strict": true
-    // ❌ 不要添加 experimentalDecorators
-    // ❌ 不要添加 emitDecoratorMetadata
+    "strict": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
   }
 }
 ```
@@ -38,73 +39,53 @@ npm install hono
 ### 2. 创建控制器
 
 ```typescript
-import { Context } from 'hono';
-import { RestController, RequestMapping, GetMapping, PostMapping } from 'hono-class';
+import { 
+  RestController, 
+  RequestMapping, 
+  GetMapping, 
+  PostMapping,
+  PathVariable,
+  RequestParam,
+  RequestBody,
+  ResponseStatus
+} from 'hono-class';
 
 @RestController
-@RequestMapping('/api')
+@RequestMapping('/api/users')
 export class UserController {
 
-  // GET /api/users - 参数: (c: Context)
-  @GetMapping('/users')
-  async getUsers(c: Context) {
-    const page = c.req.query('page') || '1';
-    return { users: [], page: parseInt(page) };
+  // GET /api/users?page=1&limit=10
+  @GetMapping('')
+  getUsers(
+    @RequestParam({ name: 'page', defaultValue: '1' }) page: string,
+    @RequestParam({ name: 'limit', defaultValue: '10' }) limit: string
+  ) {
+    return { users: [], page: parseInt(page), limit: parseInt(limit) };
   }
 
-  // POST /api/users - 参数: (body, c: Context)
-  // 请求体自动注入为第一个参数（相当于 @RequestBody）
-  @PostMapping('/users')
-  async createUser(body: { name: string; email: string }, c: Context) {
+  // GET /api/users/:id
+  @GetMapping('/:id')
+  getUserById(@PathVariable('id') id: string) {
+    return { id, name: 'User ' + id };
+  }
+
+  // POST /api/users - 返回 201 Created
+  @PostMapping('')
+  @ResponseStatus(201, 'Created')
+  createUser(@RequestBody() body: { name: string; email: string }) {
     return { success: true, user: body };
   }
 }
 ```
 
-### 3. 注册路由
-
-```typescript
-import { Hono } from 'hono';
-import { RouteBuilder } from 'hono-class';
-import { UserController } from './controllers/user.controller';
-
-const app = new Hono();
-
-// 注册所有控制器
-RouteBuilder.buildRoutes(app, [
-  UserController
-]);
-
-export default app;
-```
-
-### 4. 启动服务器
-
-**方式 A：使用 Vite Dev Server（推荐开发环境）**
-
-```typescript
-// vite.config.ts
-import { defineConfig } from 'vite';
-import devServer from '@hono/vite-dev-server';
-
-export default defineConfig({
-  plugins: [
-    devServer({
-      entry: 'server.ts',
-    }),
-  ],
-});
-```
-
-```bash
-npm run dev  # 启动 Vite 开发服务器
-```
-
-**方式 B：使用 @hono/node-server（生产环境）**
+### 3. 启动服务器
 
 ```typescript
 import { serve } from '@hono/node-server';
-import app from './server';
+import { useHono } from 'hono-class';
+
+// 自动扫描 src/server/controllers 目录
+const app = await useHono();
 
 serve({ fetch: app.fetch, port: 3000 });
 console.log('Server running on http://localhost:3000');
@@ -112,152 +93,179 @@ console.log('Server running on http://localhost:3000');
 
 ---
 
-## 📘 详细使用指南
+## 📘 装饰器参考
 
-### 🎯 装饰器速查表
+### 类装饰器
 
 | 装饰器 | 用途 | 示例 |
 |--------|------|------|
 | `@RestController` | 标记控制器类 | `@RestController` |
 | `@RequestMapping(path)` | 设置路由前缀 | `@RequestMapping('/api')` |
+| `@CrossOrigin(options)` | 配置 CORS | `@CrossOrigin({ origin: '*' })` |
+| `@ControllerAdvice` | 全局异常处理器 | `@ControllerAdvice` |
+
+### 方法装饰器
+
+| 装饰器 | 用途 | 示例 |
+|--------|------|------|
 | `@GetMapping(path)` | 处理 GET 请求 | `@GetMapping('/users')` |
 | `@PostMapping(path)` | 处理 POST 请求 | `@PostMapping('/users')` |
+| `@PutMapping(path)` | 处理 PUT 请求 | `@PutMapping('/users/:id')` |
+| `@DeleteMapping(path)` | 处理 DELETE 请求 | `@DeleteMapping('/users/:id')` |
+| `@PatchMapping(path)` | 处理 PATCH 请求 | `@PatchMapping('/users/:id')` |
+| `@ResponseStatus(code)` | 设置响应状态码 | `@ResponseStatus(201)` |
+| `@ExceptionHandler(...types)` | 异常处理方法 | `@ExceptionHandler(Error)` |
 
-### 📝 方法签名规则
+### 参数装饰器
 
-| HTTP 方法 | 方法签名 | 说明 |
-|-----------|----------|------|
-| **GET** | `(c: Context) => any` | 通过 `c.req.query()` 获取参数 |
-| **POST** | `(body: T, c: Context) => any` | body 自动注入为第一个参数 |
+| 装饰器 | 用途 | 示例 |
+|--------|------|------|
+| `@PathVariable(name)` | 路径参数 | `@PathVariable('id') id: string` |
+| `@RequestParam(options)` | 查询参数 | `@RequestParam('page') page: string` |
+| `@RequestHeader(name)` | 请求头 | `@RequestHeader('Authorization') auth: string` |
+| `@RequestBody()` | 请求体 | `@RequestBody() body: CreateUserDto` |
+| `@CookieValue(name)` | Cookie 值 | `@CookieValue('sessionId') session: string` |
+| `@Ctx()` | Hono Context | `@Ctx() ctx: Context` |
 
-### GET 请求示例
+---
+
+## 🎯 使用示例
+
+### 参数装饰器
 
 ```typescript
-@GetMapping('/users/:id')
-async getUser(c: Context) {
-  const id = c.req.param('id');                // 路径参数
-  const page = c.req.query('page');            // 查询参数
-  const token = c.req.header('Authorization'); // 请求头
+@RestController
+@RequestMapping('/api')
+export class ExampleController {
+  // 路径参数
+  @GetMapping('/users/:id')
+  getUser(@PathVariable('id') id: string) {
+    return { id };
+  }
 
-  return { id, page };
+  // 查询参数（带默认值）
+  @GetMapping('/search')
+  search(
+    @RequestParam('q') query: string,
+    @RequestParam({ name: 'page', defaultValue: '1' }) page: string
+  ) {
+    return { query, page: parseInt(page) };
+  }
+
+  // 请求头
+  @GetMapping('/protected')
+  protected(@RequestHeader('Authorization') auth: string) {
+    return { authorized: !!auth };
+  }
+
+  // 请求体
+  @PostMapping('/data')
+  @ResponseStatus(201)
+  createData(@RequestBody() body: any) {
+    return { received: body };
+  }
 }
 ```
 
-### POST 请求示例
+### 异常处理
 
 ```typescript
-interface CreateUserDto {
-  name: string;
-  email: string;
+// 自定义异常
+class ValidationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ValidationError';
+  }
 }
 
-@PostMapping('/users')
-async createUser(body: CreateUserDto, c: Context) {
-  // body 已自动解析为 JSON 对象
-  console.log(body.name, body.email);
+// 全局异常处理器
+@ControllerAdvice
+export class GlobalExceptionHandler {
+  @ExceptionHandler(ValidationError)
+  @ResponseStatus(400)
+  handleValidation(error: ValidationError) {
+    return { success: false, message: error.message };
+  }
 
-  return { success: true, user: body };
+  @ExceptionHandler(Error)
+  @ResponseStatus(500)
+  handleError(error: Error) {
+    return { success: false, message: 'Internal Server Error' };
+  }
+}
+
+// 控制器中抛出异常
+@RestController
+@RequestMapping('/api')
+export class UserController {
+  @PostMapping('/users')
+  createUser(@RequestBody() body: any) {
+    if (!body.name) {
+      throw new ValidationError('Name is required');
+    }
+    return { user: body };
+  }
 }
 ```
 
-### 多控制器注册
+### CORS 配置
 
 ```typescript
-import { UserController } from './controllers/user.controller';
-import { OrderController } from './controllers/order.controller';
-import { ProductController } from './controllers/product.controller';
-
-RouteBuilder.buildRoutes(app, [
-  UserController,
-  OrderController,
-  ProductController
-]);
-```
-
-### 🔄 请求处理流程
-
-```
-请求: POST /api/users
-Body: { "name": "John", "email": "john@example.com" }
-      │
-      ▼
-┌─────────────────────────────────────────┐
-│ Hono 路由匹配: app.post('/api/users')   │
-└─────────────────────────────────────────┘
-      │
-      ▼
-┌─────────────────────────────────────────┐
-│ RouteBuilder 创建的 handler:            │
-│   const body = await c.req.json();      │
-│   return instance.createUser(body, c);  │
-└─────────────────────────────────────────┘
-      │
-      ▼
-┌─────────────────────────────────────────┐
-│ 控制器方法:                              │
-│   async createUser(body, c) {           │
-│     return { success: true, user: body };│
-│   }                                      │
-└─────────────────────────────────────────┘
-      │
-      ▼
-响应: { "success": true, "user": { "name": "John", ... } }
+@RestController
+@RequestMapping('/api')
+@CrossOrigin({
+  origin: ['http://localhost:3000', 'https://example.com'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+  maxAge: 86400
+})
+export class ApiController {
+  // ...
+}
 ```
 
 ---
 
 ## 📖 API 参考
 
-### 类装饰器
+### `useHono(packages?: string[])`
 
-#### `@RestController`
-
-标记一个类为 REST 控制器。
+创建并配置 Hono 应用实例，自动扫描并注册控制器。
 
 ```typescript
-@RestController
-export class ApiController {
-  // ...
-}
+// 默认扫描 ./controllers（相对于 src/server/）
+const app = await useHono();
+
+// 自定义扫描路径
+const app = await useHono(['./controllers', './api']);
 ```
 
-#### `@RequestMapping(prefix?: string)`
+### `AppConfig`
 
-定义控制器级别的路由前缀。
+全局应用配置类，用于手动注册控制器。
 
 ```typescript
-@RestController
-@RequestMapping('/api/v1')
-export class ApiController {
-  // 所有路由将以 /api/v1 为前缀
-}
+import { Hono } from 'hono';
+import { AppConfig } from 'hono-class';
+
+const app = new Hono();
+AppConfig.registerController(UserController);
+AppConfig.buildApp(app);
 ```
 
-### 方法装饰器
+### `ParamResolver`
 
-#### `@GetMapping(path?: string)`
-
-处理 GET 请求。方法签名：`(c: Context) => any`
+参数解析器，用于从请求中提取参数值。
 
 ```typescript
-@GetMapping('/users')
-async getUsers(c: Context) {
-  return { users: [] };
-}
+import { ParamResolver } from 'hono-class';
+
+// 内部使用，通常不需要直接调用
+const args = await ParamResolver.resolve(context, paramMetadata);
 ```
 
-#### `@PostMapping(path?: string)`
-
-处理 POST 请求。方法签名：`(body: any, c: Context) => any`
-
-请求体自动解析并注入为第一个参数（相当于 Spring 的 `@RequestBody`）。
-
-```typescript
-@PostMapping('/users')
-async createUser(body: CreateUserDto, c: Context) {
-  return { success: true, user: body };
-}
-```
+---
 
 ## 🔧 实现原理
 
@@ -268,183 +276,52 @@ async createUser(body: CreateUserDto, c: Context) {
 │                        编译时 (TypeScript)                        │
 ├──────────────────────────────────────────────────────────────────┤
 │  @RestController                                                 │
-│  @RequestMapping('/api')     ──→  context.metadata[PREFIX] = '/api'
+│  @RequestMapping('/api')     ──→  Reflect.defineMetadata(PREFIX) │
 │  class ApiController {                                           │
 │                                                                  │
-│    @GetMapping('/users')     ──→  context.metadata[ROUTES].push({│
-│    getUsers(c: Context) {}        methodName: 'getUsers',        │
-│                                   path: '/users',                │
-│    @PostMapping('/like')          httpMethod: 'GET'              │
-│    like(body, c: Context) {}    })                               │
+│    @GetMapping('/users')     ──→  Reflect.defineMetadata(ROUTES) │
+│    getUsers(@RequestParam('page') page: string) {}               │
+│                              ──→  Reflect.defineMetadata(PARAMS) │
 │  }                                                               │
 └──────────────────────────────────────────────────────────────────┘
                                 │
                                 ▼
 ┌──────────────────────────────────────────────────────────────────┐
-│                        运行时 (RouteBuilder)                      │
+│                        运行时 (AppConfig)                         │
 ├──────────────────────────────────────────────────────────────────┤
-│  RouteBuilder.buildRoutes(app, [ApiController])                  │
+│  AppConfig.buildApp(app)                                         │
 │                                                                  │
-│  1. 读取 ApiController[Symbol.metadata]                          │
-│  2. 获取 prefix = '/api'                                         │
-│  3. 获取 routes = [{methodName, path, httpMethod}...]            │
-│  4. 注册到 Hono:                                                 │
-│     app.get('/api/users', handler)                               │
-│     app.post('/api/like', handler)                               │
+│  1. 读取 Reflect.getMetadata(PREFIX, Controller)                 │
+│  2. 读取 Reflect.getMetadata(ROUTES, Controller)                 │
+│  3. 读取 Reflect.getMetadata(PARAMS, Controller, methodName)     │
+│  4. 使用 ParamResolver 解析参数                                   │
+│  5. 注册路由到 Hono                                               │
 └──────────────────────────────────────────────────────────────────┘
 ```
 
-### 核心组件
-
-#### 1. 元数据存储 (`metadata/constants.ts`)
-
-使用 **TC39 Stage 3 Symbol.metadata 标准** 存储装饰器元数据：
+### 元数据键
 
 ```typescript
-// Symbol.metadata Polyfill（Vite 尚未内置支持）
-(Symbol as any).metadata ??= Symbol('Symbol.metadata');
-
-// 元数据键（使用 Symbol 确保唯一性）
 export const METADATA_KEYS = {
-  PREFIX: Symbol('hono:prefix'),   // 存储路由前缀
-  ROUTES: Symbol('hono:routes'),   // 存储路由列表
-} as const;
-
-// 辅助函数
-export function addRoute(metadata, route) { ... }
-export function setPrefix(metadata, prefix) { ... }
-export function getRoutes(metadata) { ... }
-export function getPrefix(metadata) { ... }
+  CONTROLLER: 'hono:controller',
+  PREFIX: 'hono:prefix',
+  CORS: 'hono:cors',
+  CONTROLLER_ADVICE: 'hono:controllerAdvice',
+  ROUTES: 'hono:routes',
+  RESPONSE_STATUS: 'hono:responseStatus',
+  EXCEPTION_HANDLER: 'hono:exceptionHandler',
+  PARAMS: 'hono:params',
+};
 ```
 
-**关键点**：
-- `context.metadata` 是装饰器运行时自动创建的对象
-- 装饰器执行完后，可以通过 `Class[Symbol.metadata]` 访问
-
-#### 2. 类装饰器 (`decorators/controller.ts`)
-
-```typescript
-// @RequestMapping('/api') - 设置路由前缀
-export function RequestMapping(path: string = '') {
-  return <T>(target: T, context: ClassDecoratorContext<T>): T => {
-    // 写入元数据：context.metadata[PREFIX] = '/api'
-    setPrefix(context.metadata, normalizedPath);
-    return target;
-  };
-}
-```
-
-#### 3. 方法装饰器 (`decorators/http-methods.ts`)
-
-```typescript
-function createMethodDecorator(method: string, hasBody: boolean = false) {
-  return (path: string = '') => {
-    return <T>(target: T, context: ClassMethodDecoratorContext): T => {
-      // 写入元数据：context.metadata[ROUTES].push({...})
-      addRoute(context.metadata, {
-        methodName: context.name as string,
-        path: normalizedPath,
-        httpMethod: method.toUpperCase(),
-        hasBody,  // POST 等方法需要自动注入 body
-      });
-      return target;
-    };
-  };
-}
-
-export const GetMapping = createMethodDecorator('GET', false);
-export const PostMapping = createMethodDecorator('POST', true);
-```
-
-#### 4. 路由构建器 (`builder/route-builder.ts`)
-
-连接装饰器和 Hono 的桥梁：
-
-```typescript
-export class RouteBuilder {
-  static buildRoutes(app: Hono, controllers: any[]): void {
-    for (const ControllerClass of controllers) {
-      // 1. 通过 Symbol.metadata 读取元数据
-      const metadata = ControllerClass[Symbol.metadata];
-      const prefix = getPrefix(metadata);     // '/api'
-      const routes = getRoutes(metadata);     // [{methodName, path, ...}]
-
-      // 2. 创建控制器实例
-      const instance = new ControllerClass();
-
-      // 3. 注册每个路由到 Hono
-      for (const route of routes) {
-        const fullPath = prefix + route.path;  // '/api' + '/users'
-        const handler = this.createHandler(instance, route);
-        app[route.httpMethod.toLowerCase()](fullPath, handler);
-      }
-    }
-  }
-
-  private static createHandler(instance, route) {
-    return async (c: Context) => {
-      if (route.hasBody) {
-        // POST: 解析 body，传给方法
-        const body = await c.req.json();
-        return c.json(await instance[route.methodName](body, c));
-      } else {
-        // GET: 只传 Context
-        return c.json(await instance[route.methodName](c));
-      }
-    };
-  }
-}
-```
-
-### 完整数据流
-
-```
-1. 编译时：装饰器执行
-   @RequestMapping('/api') → metadata[PREFIX] = '/api'
-   @GetMapping('/users')   → metadata[ROUTES].push({...})
-   @PostMapping('/like')   → metadata[ROUTES].push({...})
-
-2. 运行时：服务器启动
-   RouteBuilder.buildRoutes(app, [ApiController])
-
-3. 读取元数据：
-   ApiController[Symbol.metadata] = {
-     [PREFIX]: '/api',
-     [ROUTES]: [
-       { methodName: 'getUsers', path: '/users', httpMethod: 'GET', hasBody: false },
-       { methodName: 'like', path: '/like', httpMethod: 'POST', hasBody: true }
-     ]
-   }
-
-4. 注册到 Hono：
-   app.get('/api/users', async (c) => instance.getUsers(c))
-   app.post('/api/like', async (c) => {
-     const body = await c.req.json();
-     return instance.like(body, c);
-   })
-```
-
-## 🆚 与其他方案对比
-
-| 特性 | hono-class | NestJS | 传统 Hono |
-|------|---------------|--------|-----------|
-| 装饰器标准 | TC39 Stage 3 ✅ | Legacy (experimentalDecorators) | - |
-| 元数据存储 | Symbol.metadata | reflect-metadata | - |
-| 额外依赖 | 无 | reflect-metadata | 无 |
-| Vite 兼容 | ✅ | ❌ (需要配置) | ✅ |
-| 代码风格 | Spring Boot | NestJS | 函数式 |
+---
 
 ## 📝 注意事项
 
-1. **不支持参数装饰器** - TC39 Stage 3 装饰器标准不支持参数装饰器
-   - GET 请求：通过 `c.req.query()` 获取参数
-   - POST 请求：请求体自动注入为第一个参数
-
-2. **需要 TypeScript 5.2+** - 使用原生 Stage 3 装饰器支持
-
-3. **Vite 环境** - 需要 Symbol.metadata polyfill（已内置）
+1. **需要 reflect-metadata** - 必须安装并在入口文件导入
+2. **TypeScript 配置** - 必须启用 `experimentalDecorators` 和 `emitDecoratorMetadata`
+3. **参数顺序** - 参数装饰器按声明顺序解析
 
 ## 📄 License
 
 MIT
-
