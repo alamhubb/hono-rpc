@@ -1,4 +1,4 @@
-import { useHono } from 'hono-decorator';
+import { useHono } from 'hono-class';
 import { serve } from '@hono/node-server';
 
 // 🎉 零配置：自动扫描并加载控制器

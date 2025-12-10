@@ -1,5 +1,5 @@
 /**
- * hono-decorator
+ * hono-class
  * Spring Boot 风格的装饰器路由 for Hono (Stage 3 Decorators)
  */
 

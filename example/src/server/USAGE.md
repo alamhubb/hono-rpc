@@ -18,7 +18,7 @@
 
 ```typescript
 // 文件位置：src/server/index.ts
-import { useHono } from 'hono-decorator';
+import { useHono } from 'hono-class';
 
 // 零配置：自动扫描 src/server/controllers
 const app = await useHono();
@@ -32,7 +32,7 @@ export default app;
 
 ```typescript
 // 文件位置：src/server/index.ts
-import { useHono } from 'hono-decorator';
+import { useHono } from 'hono-class';
 
 // 默认扫描 ./controllers（相对于 src/server/）
 // 实际扫描：src/server/controllers
@@ -110,7 +110,7 @@ src/server/
 
 ### 对比 Spring Boot
 
-| Spring Boot | hono-decorator |
+| Spring Boot | hono-class |
 |-------------|----------------|
 | `@ComponentScan(basePackages = {"com.example"})` | `useHono(['src/server/controllers'])` |
 | 基于包名扫描 | 基于文件路径扫描 |

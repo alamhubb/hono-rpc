@@ -2,7 +2,7 @@
 
 ## 🎯 项目特点
 
-这是一个**纯 Node.js + Hono** 项目，使用 `hono-decorator` 实现 Spring Boot 风格的装饰器路由。
+这是一个**纯 Node.js + Hono** 项目，使用 `hono-class` 实现 Spring Boot 风格的装饰器路由。
 
 ### 与 Vite 版本的区别
 
@@ -32,7 +32,7 @@
 
 ### 本地依赖
 
-- **hono-decorator** - 通过 `paths` 映射到 `../hono-decorator/src`
+- **hono-class** - 通过 `paths` 映射到 `../hono-class/src`
 
 ## 🏗️ 项目结构
 
@@ -231,7 +231,7 @@ export class HelloController { ... }
 
 ## 📝 总结
 
-这个 Standalone 版本展示了 `hono-decorator` 可以：
+这个 Standalone 版本展示了 `hono-class` 可以：
 
 - ✅ 独立于 Vite 使用
 - ✅ 在纯 Node.js 环境中运行

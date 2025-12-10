@@ -1,4 +1,4 @@
-import { RestController, RequestMapping, GetMapping, PostMapping } from '../../../hono-decorator/src/index';
+import { RestController, RequestMapping, GetMapping, PostMapping } from '../../../hono-class/src/index';
 import { getUsers } from '../db/queries';
 import type { Context } from 'hono';
 

@@ -93,7 +93,7 @@ Invoke-RestMethod -Method POST -Uri http://localhost:3000/api/users `
 {
   "message": "Hello from standalone Hono server!",
   "timestamp": "2024-01-01T00:00:00.000Z",
-  "framework": "Hono + hono-decorator",
+  "framework": "Hono + hono-class",
   "runtime": "Node.js (no Vite)"
 }
 ```

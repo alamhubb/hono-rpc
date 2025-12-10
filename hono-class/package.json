@@ -1,5 +1,5 @@
 {
-  "name": "hono-decorator",
+  "name": "hono-class",
   "version": "0.1.0",
   "description": "Decorator-based routing for Hono - NestJS-style decorators for Hono framework",
   "type": "module",

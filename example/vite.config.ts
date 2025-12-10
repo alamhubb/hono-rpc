@@ -5,7 +5,7 @@ import path from 'path';
 export default defineConfig({
     resolve: {
         alias: {
-            'hono-decorator': path.resolve(__dirname, '../hono-decorator/src'),
+            'hono-class': path.resolve(__dirname, '../hono-class/src'),
         },
     },
     esbuild: {

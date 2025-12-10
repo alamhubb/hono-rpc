@@ -1,4 +1,4 @@
-import { RestController, RequestMapping, GetMapping } from 'hono-decorator';
+import { RestController, RequestMapping, GetMapping } from 'hono-class';
 import type { Context } from 'hono';
 
 @RestController

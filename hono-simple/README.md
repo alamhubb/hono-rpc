@@ -1,4 +1,4 @@
-# Hono with hono-decorator
+# Hono with hono-class
 
 使用 Spring Boot 风格的装饰器路由的 Hono 项目。
 

@@ -1,6 +1,6 @@
-# hono-decorator Example
+# hono-class Example
 
-这是一个使用 `hono-decorator` 装饰器框架的完整示例应用。
+这是一个使用 `hono-class` 装饰器框架的完整示例应用。
 
 ## 功能特性
 
@@ -12,7 +12,7 @@
 
 ## 技术栈
 
-- **[hono-decorator](../hono-decorator)** - 装饰器路由框架
+- **[hono-class](../hono-class)** - 装饰器路由框架
 - **[Hono](https://hono.dev/)** - Web 框架
 - **[Vite](https://vitejs.dev/)** - 构建工具
 - **[Drizzle ORM](https://orm.drizzle.team/)** - 数据库 ORM

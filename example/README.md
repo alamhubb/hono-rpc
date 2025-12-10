@@ -1,6 +1,6 @@
 # Vite + Hono + TypeScript 项目
 
-这是一个使用 Vite、Hono 和 hono-decorator 的全栈 TypeScript 项目示例。
+这是一个使用 Vite、Hono 和 hono-class 的全栈 TypeScript 项目示例。
 
 ## 📁 项目结构
 
@@ -61,7 +61,7 @@ npm run build
 ### 服务端 (Server)
 
 - **Hono** - 轻量级 Web 框架
-- **hono-decorator** - Spring Boot 风格的装饰器路由
+- **hono-class** - Spring Boot 风格的装饰器路由
 - **自动扫描** - 使用 Node.js fs 模块自动扫描控制器
 - **零配置** - 无需手动导入控制器文件
 
@@ -88,7 +88,7 @@ export class HelloController {
 
 - **entry**: `src/server/index.ts` - Hono 应用入口
 - **exclude**: 配置哪些路径由 Vite 处理，哪些由 Hono 处理
-- **alias**: 配置 hono-decorator 路径别名
+- **alias**: 配置 hono-class 路径别名
 
 ### TypeScript 配置
 

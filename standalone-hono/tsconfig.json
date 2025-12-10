@@ -17,7 +17,7 @@
     "sourceMap": true,
     "experimentalDecorators": false,
     "paths": {
-      "hono-decorator": ["../hono-decorator/src"]
+      "hono-class": ["../hono-class/src"]
     }
   },
   "include": [

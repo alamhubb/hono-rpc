@@ -1,4 +1,4 @@
-import { RestController, RequestMapping, GetMapping } from 'hono-decorator';
+import { RestController, RequestMapping, GetMapping } from 'hono-class';
 import type { Context } from 'hono';
 
 @RestController
@@ -9,7 +9,7 @@ export class HelloController {
     return c.json({
       message: 'Hello from standalone Hono server!',
       timestamp: new Date().toISOString(),
-      framework: 'Hono + hono-decorator',
+      framework: 'Hono + hono-class',
       runtime: 'Node.js (no Vite)'
     });
   }

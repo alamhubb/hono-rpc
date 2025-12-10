@@ -14,7 +14,7 @@
     "outDir": "./dist",
     "experimentalDecorators": false,
     "paths": {
-      "hono-decorator": ["../hono-decorator/src"]
+      "hono-class": ["../hono-class/src"]
     }
   },
   "exclude": ["node_modules"]

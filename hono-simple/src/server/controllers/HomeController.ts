@@ -1,4 +1,4 @@
-import { RestController, RequestMapping, GetMapping } from 'hono-decorator';
+import { RestController, RequestMapping, GetMapping } from 'hono-class';
 import type { Context } from 'hono';
 
 @RestController
@@ -14,7 +14,7 @@ export class HomeController {
     return c.json({
       name: 'Hono Simple',
       version: '1.0.0',
-      description: 'A simple Hono server with hono-decorator',
+      description: 'A simple Hono server with hono-class',
       features: [
         'Zero configuration',
         'Auto controller scanning',

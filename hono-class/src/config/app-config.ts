@@ -200,7 +200,7 @@ export class AppConfig {
  * @example
  * ```typescript
  * // 文件位置：src/server/index.ts
- * import { useHono } from 'hono-decorator';
+ * import { useHono } from 'hono-class';
  *
  * // 使用默认配置：扫描 ./controllers（相对于 src/server/）
  * const app = await useHono();

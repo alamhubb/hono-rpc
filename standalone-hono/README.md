@@ -1,6 +1,6 @@
 # Standalone Hono Server
 
-纯 Node.js + Hono + hono-decorator 项目（不依赖 Vite）
+纯 Node.js + Hono + hono-class 项目（不依赖 Vite）
 
 ## 📁 项目结构
 
@@ -118,7 +118,7 @@ curl http://localhost:3000/api/admin/dashboard
 ## 📚 技术栈
 
 - **Hono** - 轻量级 Web 框架
-- **hono-decorator** - Spring Boot 风格的装饰器路由
+- **hono-class** - Spring Boot 风格的装饰器路由
 - **TypeScript** - 类型安全
 - **tsx** - TypeScript 执行器（开发模式）
 - **@hono/node-server** - Node.js 适配器
@@ -148,7 +148,7 @@ const app = await useHono(['./controllers', './api']);
 示例：
 
 ```typescript
-import { RestController, RequestMapping, GetMapping } from 'hono-decorator';
+import { RestController, RequestMapping, GetMapping } from 'hono-class';
 import type { Context } from 'hono';
 
 @RestController

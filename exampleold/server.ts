@@ -1,16 +1,16 @@
 import { Hono } from 'hono';
 import { readFileSync } from 'fs';
-import { RouteBuilder } from '../hono-decorator/src/index';
+import { RouteBuilder } from '../hono-class/src/index';
 import { ApiController } from './src/controllers/api.controller';
 
 /**
- * 🎨 使用 hono-decorator 装饰器方式创建 Hono 应用（Stage 3 装饰器）
+ * 🎨 使用 hono-class 装饰器方式创建 Hono 应用（Stage 3 装饰器）
  * 纯 CSR 模式：客户端渲染，API 提供数据
  */
 const app = new Hono();
 
 // 🔥 注册所有 API 控制器
-console.log('\n🎨 使用 hono-decorator 装饰器框架 (Stage 3 - CSR 模式)\n');
+console.log('\n🎨 使用 hono-class 装饰器框架 (Stage 3 - CSR 模式)\n');
 RouteBuilder.buildRoutes(app, [
   ApiController,    // API 路由控制器
 ]);

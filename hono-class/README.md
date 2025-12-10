@@ -1,4 +1,4 @@
-# hono-decorator
+# hono-class
 
 🎨 Spring Boot 风格的装饰器路由框架，基于 [Hono](https://hono.dev/) 和 **TC39 Stage 3 装饰器标准**。
 
@@ -14,7 +14,7 @@
 
 ```bash
 npm install hono
-# hono-decorator 目前作为本地包使用
+# hono-class 目前作为本地包使用
 ```
 
 ## 🚀 快速开始
@@ -39,7 +39,7 @@ npm install hono
 
 ```typescript
 import { Context } from 'hono';
-import { RestController, RequestMapping, GetMapping, PostMapping } from 'hono-decorator';
+import { RestController, RequestMapping, GetMapping, PostMapping } from 'hono-class';
 
 @RestController
 @RequestMapping('/api')
@@ -65,7 +65,7 @@ export class UserController {
 
 ```typescript
 import { Hono } from 'hono';
-import { RouteBuilder } from 'hono-decorator';
+import { RouteBuilder } from 'hono-class';
 import { UserController } from './controllers/user.controller';
 
 const app = new Hono();
@@ -426,7 +426,7 @@ export class RouteBuilder {
 
 ## 🆚 与其他方案对比
 
-| 特性 | hono-decorator | NestJS | 传统 Hono |
+| 特性 | hono-class | NestJS | 传统 Hono |
 |------|---------------|--------|-----------|
 | 装饰器标准 | TC39 Stage 3 ✅ | Legacy (experimentalDecorators) | - |
 | 元数据存储 | Symbol.metadata | reflect-metadata | - |
