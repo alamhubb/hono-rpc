@@ -1,5 +1,8 @@
 import { useHono } from 'hono-class';
 
+// 导入共享控制器（服务端会自动注册路由）
+import '../shared/controllers/index.ts';
+
 // 🎉 零配置：自动扫描并加载控制器
 // 类似 Spring Boot 的 @ComponentScan
 //
