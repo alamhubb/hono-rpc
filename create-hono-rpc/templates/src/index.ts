@@ -17,23 +17,25 @@ app.get('/', (c) => {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Hono RPC Demo</title>
 </head>
-<body>
-  <h1>🚀 Hono RPC</h1>
-  <p>一次定义，服务端/客户端双用</p>
-  
-  <button onclick="callGetTime()">获取服务器时间</button>
-  <br><br>
-  <input type="text" id="nameInput" placeholder="输入你的名字" value="World">
-  <button onclick="callGreet()">调用问候接口</button>
+<body style="margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;">
+  <div style="text-align:center;">
+    <h1>🚀 Hono RPC</h1>
+    <p>一次定义，服务端/客户端双用</p>
+    
+    <button onclick="callGetTime()">获取服务器时间</button>
+    <br><br>
+    <input type="text" id="nameInput" placeholder="输入你的名字" value="World">
+    <button onclick="callGreet()">调用问候接口</button>
+  </div>
 
-  <div id="toast" style="display:none; position:fixed; top:20px; right:20px; background:#333; color:#fff; padding:12px 20px; border-radius:6px;"></div>
+  <div id="toast" style="display:none; position:fixed; top:20px; left:50%; transform:translateX(-50%); background:#333; color:#fff; padding:12px 20px; border-radius:6px;"></div>
 
   <script>
     function showToast(msg) {
       const toast = document.getElementById('toast');
       toast.textContent = msg;
       toast.style.display = 'block';
-      setTimeout(() => toast.style.display = 'none', 3000);
+      setTimeout(() => toast.style.display = 'none', 2000);
     }
 
     async function callGetTime() {
