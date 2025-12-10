@@ -5,7 +5,7 @@ import { setupCounter } from './counter.ts'
 
 // 🎉 RPC 调用：直接导入控制器，调用静态方法
 // 客户端会自动将方法调用转换为 HTTP 请求
-import { UserController, type User } from '../shared/controllers/index.ts'
+import { UserController, type User } from '../server/controllers/UserController.ts'
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   <div>
