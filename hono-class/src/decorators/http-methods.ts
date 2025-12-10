@@ -86,8 +86,6 @@ function createMethodDecorator(httpMethod: string) {
         console.log(`[${httpMethod.toUpperCase()}Mapping] ${normalizedPath || '/'} -> ${methodName}()`);
       } else {
         // ========== 客户端：替换为 HTTP 请求 ==========
-        const originalMethod = descriptor.value;
-        
         descriptor.value = async function(...args: any[]) {
           // 获取类的路由前缀
           const prefix: string = Reflect.getMetadata(METADATA_KEYS.PREFIX, targetClass) || '';

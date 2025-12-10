@@ -52,7 +52,7 @@ async function main() {
   fs.mkdirSync(targetDir, { recursive: true });
 
   // 复制模板
-  const templateDir = path.resolve(__dirname, '../templates/default');
+  const templateDir = path.resolve(__dirname, '../templates');
   copyDir(templateDir, targetDir);
 
   // 更新 package.json 中的项目名

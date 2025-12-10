@@ -27,11 +27,8 @@ export function RestController(target: Function): void {
   Reflect.defineMetadata(METADATA_KEYS.CONTROLLER, options, target);
   
   if (isServer()) {
-    const config = getAppConfigSync();
-    if (config) {
-      config.registerController(target);
-      console.log(`[RestController] ${target.name}`);
-    }
+    AppConfig.registerController(target);
+    console.log(`[RestController] ${target.name}`);
   }
 }
 
@@ -72,9 +69,6 @@ export function ControllerAdvice(target: Function): void {
   
   Reflect.defineMetadata(METADATA_KEYS.CONTROLLER_ADVICE, true, target);
   
-  const config = getAppConfigSync();
-  if (config) {
-    config.registerControllerAdvice(target);
-    console.log(`[ControllerAdvice] ${target.name}`);
-  }
+  AppConfig.registerControllerAdvice(target);
+  console.log(`[ControllerAdvice] ${target.name}`);
 }
