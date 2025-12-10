@@ -14,12 +14,14 @@
     "routing",
     "typescript",
     "nestjs-style",
-    "web-framework"
+    "web-framework",
+    "rpc"
   ],
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "reflect-metadata": "^0.2.2"
+    "reflect-metadata": "^0.2.2",
+    "hono-rpc": "../hono-rpc"
   },
   "peerDependencies": {
     "hono": "^4.0.0"

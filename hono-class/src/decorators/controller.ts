@@ -1,29 +1,13 @@
 /**
  * Class Decorators for Legacy Decorators (experimentalDecorators)
  * 支持服务端（注册路由）和客户端（存储元数据）双模式
+ * 
+ * 基于 hono-rpc 的 isServer
  */
 import 'reflect-metadata';
 import { METADATA_KEYS, type ControllerOptions, type CorsOptions } from '../metadata/constants.ts';
-
-/**
- * 判断是否为服务端环境
- */
-function isServer(): boolean {
-  // Vite 环境
-  if (typeof import.meta !== 'undefined' && (import.meta as any).env?.SSR !== undefined) {
-    return (import.meta as any).env.SSR === true;
-  }
-  // Node.js 环境（无 window）
-  return typeof window === 'undefined';
-}
-
-/**
- * 动态导入 AppConfig（仅服务端）
- */
-async function getAppConfig() {
-  const { AppConfig } = await import('../config/app-config.ts');
-  return AppConfig;
-}
+import { isServer } from 'hono-rpc';
+import { AppConfig } from '../config/app-config.ts';
 
 /**
  * 标准化路径（确保以 / 开头，不以 / 结尾）
@@ -43,11 +27,11 @@ export function RestController(target: Function): void {
   Reflect.defineMetadata(METADATA_KEYS.CONTROLLER, options, target);
   
   if (isServer()) {
-    // 动态导入 AppConfig，避免客户端加载 Node.js 模块
-    getAppConfig().then(AppConfig => {
-      AppConfig.registerController(target);
+    const config = getAppConfigSync();
+    if (config) {
+      config.registerController(target);
       console.log(`[RestController] ${target.name}`);
-    });
+    }
   }
 }
 
@@ -88,9 +72,9 @@ export function ControllerAdvice(target: Function): void {
   
   Reflect.defineMetadata(METADATA_KEYS.CONTROLLER_ADVICE, true, target);
   
-  // 动态导入 AppConfig，避免客户端加载 Node.js 模块
-  getAppConfig().then(AppConfig => {
-    AppConfig.registerControllerAdvice(target);
+  const config = getAppConfigSync();
+  if (config) {
+    config.registerControllerAdvice(target);
     console.log(`[ControllerAdvice] ${target.name}`);
-  });
+  }
 }

@@ -1,0 +1,21 @@
+{
+  "name": "hono-rpc",
+  "version": "1.0.0",
+  "description": "函数式 RPC 框架 for Hono - 定义一次，服务端/客户端双用",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "keywords": ["hono", "rpc", "typescript", "api"],
+  "dependencies": {
+    "hono": "^4.10.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.21",
+    "typescript": "~5.9.3",
+    "vitest": "^3.2.4"
+  }
+}

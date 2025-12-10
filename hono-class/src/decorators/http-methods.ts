@@ -1,9 +1,12 @@
 /**
  * HTTP Method Decorators for Legacy Decorators (experimentalDecorators)
  * 支持服务端（注册路由）和客户端（发送 HTTP 请求）双模式
+ * 
+ * 基于 hono-rpc 的 isServer 和 httpRequest
  */
 import 'reflect-metadata';
 import { METADATA_KEYS, type RouteMetadata, type ResponseStatusMetadata } from '../metadata/constants.ts';
+import { isServer, httpRequest as baseHttpRequest } from 'hono-rpc';
 
 /**
  * HTTP 方法装饰器选项
@@ -24,19 +27,7 @@ function normalizePath(path: string): string {
 }
 
 /**
- * 判断是否为服务端环境
- */
-function isServer(): boolean {
-  // Vite 环境
-  if (typeof import.meta !== 'undefined' && (import.meta as any).env?.SSR !== undefined) {
-    return (import.meta as any).env.SSR === true;
-  }
-  // Node.js 环境（无 window）
-  return typeof window === 'undefined';
-}
-
-/**
- * 客户端 HTTP 请求函数
+ * 客户端 HTTP 请求函数（扩展 hono-rpc 的 httpRequest，支持路径参数和查询参数）
  */
 async function httpRequest(
   method: string,
@@ -64,24 +55,7 @@ async function httpRequest(
     finalUrl += `?${searchParams.toString()}`;
   }
 
-  const options: RequestInit = {
-    method,
-    headers: {},
-  };
-
-  if (body && ['POST', 'PUT', 'PATCH'].includes(method)) {
-    (options.headers as Record<string, string>)['Content-Type'] = 'application/json';
-    options.body = JSON.stringify(body);
-  }
-
-  const response = await fetch(finalUrl, options);
-  
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: response.statusText }));
-    throw new Error(error.message || `HTTP ${response.status}`);
-  }
-
-  return response.json();
+  return baseHttpRequest(method, finalUrl, body);
 }
 
 /**
