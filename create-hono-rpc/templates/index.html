@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hono RPC Demo</title>
+</head>
+<body style="margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;">
+  <div style="text-align:center;">
+    <h1>🚀 Hono RPC</h1>
+    <p>一次定义，服务端/客户端双用</p>
+    
+    <button id="getTimeBtn">获取服务器时间</button>
+    <br><br>
+    <input type="text" id="nameInput" placeholder="输入你的名字" value="World">
+    <button id="greetBtn">调用问候接口</button>
+  </div>
+
+  <div id="toast" style="display:none; position:fixed; top:20px; left:50%; transform:translateX(-50%); background:#333; color:#fff; padding:12px 20px; border-radius:6px;"></div>
+
+  <script type="module" src="/src/client.ts"></script>
+</body>
+</html>
